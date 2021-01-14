@@ -9,7 +9,7 @@ TEST_CASE("rotate_module" * doctest::timeout(300)) {
   
   sp::SequencePairTester tester;
 
-  tester.open("/home/chiu/sequence_pair/circuits/circuit2.txt");
+  tester.open("../../circuits/circuit2.txt");
   
   tester.generate_initial_pair();
    
@@ -48,7 +48,7 @@ TEST_CASE("swap_nodes_in_one_sequence" * doctest::timeout(300)) {
   
   sp::SequencePairTester tester;
 
-  tester.open("/home/chiu/sequence_pair/circuits/circuit2.txt");
+  tester.open("../../circuits/circuit2.txt");
   
   tester.generate_initial_pair();
    
@@ -140,7 +140,7 @@ TEST_CASE("swap_nodes_in_two_sequences" * doctest::timeout(300)) {
   
   sp::SequencePairTester tester;
 
-  tester.open("/home/chiu/sequence_pair/circuits/circuit2.txt");
+  tester.open("../../circuits/circuit2.txt");
   
   tester.generate_initial_pair();
    
@@ -215,7 +215,7 @@ TEST_CASE("generate_dag" * doctest::timeout(300)) {
   
   sp::SequencePairTester tester;
 
-  tester.open("/home/chiu/sequence_pair/circuits/circuit2.txt");
+  tester.open("../../circuits/circuit2.txt");
   
   tester.generate_initial_pair();
    
@@ -274,66 +274,4 @@ TEST_CASE("generate_dag" * doctest::timeout(300)) {
     REQUIRE(idx0 < idx1);
     
   }
-  /*
-  tester.swap_two_nodes_two_sequences(old_sequences.front(), 
-                                     old_sequences.back());
-
-  std::vector<sp::Node> new_modules = tester.get_modules();
-
-  std::list<std::vector<int>> new_sequences = tester.get_sequences();
-
-  // new and old modules should be the same configurations
-  for (size_t i = 0; i < new_modules.size(); ++i) {
-    REQUIRE(new_modules[i].id == old_modules[i].id);
-    REQUIRE(new_modules[i].llx == old_modules[i].llx);
-    REQUIRE(new_modules[i].lly == old_modules[i].lly);
-    REQUIRE(new_modules[i].width == old_modules[i].width);
-    REQUIRE(new_modules[i].height == old_modules[i].height);
-  }
-
-  // test the positive sequence
-  size_t idx1 = new_sequences.front().size();
-  size_t idx2 = new_sequences.front().size();
-
-  for (size_t i = 0; i < new_sequences.front().size(); ++i) {
-    if (new_sequences.front()[i] != old_sequences.front()[i]) {
-      if (idx1 == new_sequences.front().size()) {
-        idx1 = i; 
-      }
-      else {
-        idx2 = i;
-      }
-    }
-
-    else {
-      REQUIRE(new_sequences.front()[i] == old_sequences.front()[i]);
-    }
-  }
-
-  REQUIRE(new_sequences.front()[idx1] == old_sequences.front()[idx2]);
-  REQUIRE(new_sequences.front()[idx2] == old_sequences.front()[idx1]);
-  
-  
-  // test the negative sequence
-  idx1 = new_sequences.back().size();
-  idx2 = new_sequences.back().size();
-
-  for (size_t i = 0; i < new_sequences.back().size(); ++i) {
-    if (new_sequences.back()[i] != old_sequences.back()[i]) {
-      if (idx1 == new_sequences.back().size()) {
-        idx1 = i; 
-      }
-      else {
-        idx2 = i;
-      }
-    }
-
-    else {
-      REQUIRE(new_sequences.back()[i] == old_sequences.back()[i]);
-    }
-  }
-
-  REQUIRE(new_sequences.back()[idx1] == old_sequences.back()[idx2]);
-  REQUIRE(new_sequences.back()[idx2] == old_sequences.back()[idx1]);
-  */
 }
