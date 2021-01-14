@@ -12,7 +12,7 @@ option(SP_BUILD_MAIN "Enables builds of main programs" ON)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
+#set(CMAKE_CXX_FLAGS "-pg")
 
 # project-specific variables
 set(SP_INC_INSTALL_DIR "${CMAKE_INSTALL_PREFIX}/include")

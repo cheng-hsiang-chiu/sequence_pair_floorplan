@@ -73,11 +73,11 @@ class SequencePair{
     void _generate_neighbors(std::vector<int>& positive_sequence_prop,
                              std::vector<int>& negative_sequence_prop);
 
-    size_t _pack(const std::vector<int> positive_sequence,
-                 const std::vector<int> negative_sequence);
+    size_t _pack(const std::vector<int>& positive_sequence,
+                 const std::vector<int>& negative_sequence);
 
-    void _pack_helper(const std::vector<int> positive_sequence,
-                      const std::vector<int> negative_sequence, 
+    void _pack_helper(const std::vector<int>& positive_sequence,
+                      const std::vector<int>& negative_sequence, 
                       const bool is_horizontal);
 
     void _dump_cost(std::string output_file);
@@ -91,8 +91,8 @@ class SequencePair{
       std::vector<int>& negative_sequence_prop);
 
     graph::DAG _generate_dag(
-      const std::vector<int> positive_sequence,
-      const std::vector<int> negative_sequence,
+      const std::vector<int>& positive_sequence,
+      const std::vector<int>& negative_sequence,
       const bool is_horizontal) const;
 };
 
@@ -406,8 +406,8 @@ void SequencePair::_generate_neighbors(
 
 
 // pack the modules
-size_t SequencePair::_pack(const std::vector<int> positive_sequence,
-                           const std::vector<int> negative_sequence) {
+size_t SequencePair::_pack(const std::vector<int>& positive_sequence,
+                           const std::vector<int>& negative_sequence) {
   
   _pack_helper(positive_sequence, negative_sequence, true);
   _pack_helper(positive_sequence, negative_sequence, false);
@@ -433,8 +433,8 @@ size_t SequencePair::_pack(const std::vector<int> positive_sequence,
 
 
 // pack helper
-void SequencePair::_pack_helper(const std::vector<int> positive_sequence, 
-                                const std::vector<int> negative_sequence,
+void SequencePair::_pack_helper(const std::vector<int>& positive_sequence, 
+                                const std::vector<int>& negative_sequence,
                                 const bool is_horizontal) {
 
   if (is_horizontal) {
@@ -534,8 +534,8 @@ void SequencePair::_swap_two_nodes_two_sequences(
 
 // generate a DAG
 graph::DAG SequencePair::_generate_dag(
-  const std::vector<int> positive_sequence,
-  const std::vector<int> negative_sequence,
+  const std::vector<int>& positive_sequence,
+  const std::vector<int>& negative_sequence,
   const bool is_horizontal) const {
 
   graph::DAG dag(positive_sequence.size());
