@@ -7,16 +7,16 @@
 
 namespace sort {
 
-
+// TODO: go inside the Graph class
 class TopologicalSort {
   public:
     static std::vector<int> sort(
-      const std::vector<std::vector<int>> adjacency_list);
+      const std::vector<std::vector<int>>& adjacency_list);
 };
 
 
 std::vector<int> TopologicalSort::sort(
-  const std::vector<std::vector<int>> adjacency_list) {
+  const std::vector<std::vector<int>>& adjacency_list) {
   
   size_t count = 0;
   std::vector<int> result;

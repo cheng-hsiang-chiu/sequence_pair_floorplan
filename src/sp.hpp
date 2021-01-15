@@ -2,6 +2,7 @@
 #include <vector>
 #include <random>
 #include <set>
+#include <unordered_set>
 #include <chrono>
 #include "../lib/graph.hpp"
 
@@ -441,7 +442,8 @@ void SequencePair::_pack_helper(const std::vector<int>& positive_sequence,
     _dag = _generate_dag(positive_sequence,
                          negative_sequence,
                          true);
-
+    
+    // TODO: avoid frequent use of RAII-styled vector operation
     std::vector<int> topology_order = _dag.get_topology_order();
     std::vector<graph::Node> all_nodes = _dag.get_nodes();
     std::vector<int> longest_path = 
@@ -544,9 +546,12 @@ graph::DAG SequencePair::_generate_dag(
    
   int pidx = 0, nidx = 0;
 
+  std::unordered_set<int> sequence;
+
   while (pidx < positive_sequence.size()) {
     
-    std::set<int> sequence;
+    //std::unordered_set<int> sequence;
+    sequence.clear();
     
     size_t node1_id = positive_sequence[pidx]; 
     size_t node1_cost;
@@ -590,7 +595,8 @@ graph::DAG SequencePair::_generate_dag(
         if (original_size == sequence.size()) {
           size_t node2_id = negative_sequence[i]; 
           size_t node2_cost;
-
+          
+          // TODO: optimize this out...
           for (size_t i = 0; i < _modules.size(); ++i) {
             if (node2_id == _modules[i].id) {
               node2_cost = _modules[i].width; 
