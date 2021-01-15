@@ -43,6 +43,8 @@ class SequencePair{
     void dump_json(std::string output_file);
 
   private:
+    size_t _num_modules;
+     
     std::string _input_file;
 
     std::vector<Node> _modules;
@@ -60,6 +62,8 @@ class SequencePair{
     size_t _urx = 0;
 
     size_t _ury = 0;
+
+    std::vector<int> _topological_order;
 
     graph::DAG _dag;
 
@@ -110,8 +114,8 @@ void SequencePair::open(const std::string input_file) {
     std::exit(EXIT_FAILURE);
   }
 
-  size_t num_modules, width, height, id;
-  infile >> num_modules;
+  size_t width, height, id;
+  infile >> _num_modules;
 
   while (infile >> id >> width >> height) {
     Node node;
@@ -157,7 +161,7 @@ void SequencePair::dump_json(std::string output_file) {
 
   // generate json output 
   outfile << "{\"circuit\":\""    << _input_file << "\""
-          << ",\"block_number\":" << _modules.size()
+          << ",\"block_number\":" << _num_modules
           << ",\"llx\":0"
           << ",\"lly\":0"
           << ",\"urx\":"  << _urx
@@ -166,13 +170,13 @@ void SequencePair::dump_json(std::string output_file) {
           << ",\"coordinates\":"
           << "[";
 
-  for (size_t i = 0; i < _modules.size(); ++i) {
+  for (size_t i = 0; i < _num_modules; ++i) {
     outfile << "{\"idx\":"    << _modules[i].id
             << ",\"llx\":"    << _modules[i].llx
             << ",\"lly\":"    << _modules[i].lly
             << ",\"width\":"  << _modules[i].width
             << ",\"height\":" << _modules[i].height;
-    if(i == _modules.size()-1)
+    if(i == _num_modules-1)
       outfile << "}";
     else
       outfile << "},";
@@ -201,7 +205,7 @@ void SequencePair::_dump_cost(const std::string output_file) {
 // generate an initial pair
 void SequencePair::_generate_initial_pair() {
 
-  for (size_t i = 0; i < _modules.size(); ++i) {
+  for (size_t i = 0; i < _num_modules; ++i) {
     _positive_sequence.push_back(_modules[i].id);
     _negative_sequence.push_back(_modules[i].id);
   }
@@ -225,6 +229,7 @@ void SequencePair::_generate_initial_pair() {
 
 // generate the optimized floorplan
 void SequencePair::optimize() {
+
   _generate_initial_pair();
 
   auto tbeg = std::chrono::steady_clock::now();
@@ -325,7 +330,11 @@ void SequencePair::_simulated_annealing(const double initial_temperature) {
   size_t area_best = _pack(positive_sequence_best,
                            negative_sequence_best);
   size_t area_curr = area_best; 
-   
+ 
+  size_t area_prop;
+  
+  double cost;
+    
   while(temperature > SP_FROZEN_TEMPERATURE) {
     for(size_t iter = 0; iter < SP_MAX_ITERATIONS_PER_TEMPERATURE; iter++) {
       positive_sequence_prop = positive_sequence_curr;
@@ -334,12 +343,12 @@ void SequencePair::_simulated_annealing(const double initial_temperature) {
       _generate_neighbors(positive_sequence_prop, 
                          negative_sequence_prop);
       
-      size_t area_prop = _pack(positive_sequence_prop,
-                               negative_sequence_prop);
+      area_prop = _pack(positive_sequence_prop,
+                        negative_sequence_prop);
 
-      double cost = area_prop < area_curr ?
-                    (double)-1*(area_curr - area_prop) : 
-                    (area_prop - area_curr);
+      cost = area_prop < area_curr ?
+             (double)-1*(area_curr - area_prop) : 
+             (area_prop - area_curr);
 
       _cost.push_back(area_best);
 
@@ -399,8 +408,8 @@ void SequencePair::_generate_neighbors(
       }
       break;
     case 2:
-    _swap_two_nodes_two_sequences(positive_sequence_prop,
-                                  negative_sequence_prop); 
+      _swap_two_nodes_two_sequences(positive_sequence_prop,
+                                    negative_sequence_prop); 
     break;
   }
 }
