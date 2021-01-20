@@ -22,18 +22,28 @@ class SequencePairTester{
 
     std::vector<Node> get_modules();
 
-    void swap_two_nodes_one_sequence(std::vector<int>& sequence);
+    //void swap_two_nodes_one_sequence(std::vector<int>& sequence);
 
     std::list<std::vector<int>> get_sequences();
     
-    void swap_two_nodes_two_sequences(
-      std::vector<int>& positive_sequence,
-      std::vector<int>& negative_sequence);
-    
+    void swap_two_nodes_two_sequences();
+
+    /*    
     graph::DAG generate_dag(
       const std::vector<int> positive_sequence,
       const std::vector<int> negative_sequence,
       const bool is_horizontal) const;
+    */
+    std::vector<int> get_topology_order();
+
+    void generate_adjacency_list(
+      const std::vector<int>& positive_sequence, 
+      const std::vector<int>& negative_sequence, 
+      const bool is_horizontal);
+
+    std::vector<std::vector<size_t>> get_adjacency_list();
+    
+    std::vector<int> get_longest_path(const bool is_horizontal);
 };
 
 
@@ -50,19 +60,19 @@ void SequencePairTester::generate_initial_pair() {
 
   sp._generate_initial_pair();
   
-  sp._positive_sequence[0] = 1;
-  sp._positive_sequence[1] = 2;
-  sp._positive_sequence[2] = 4;
-  sp._positive_sequence[3] = 5;
-  sp._positive_sequence[4] = 3;
-  sp._positive_sequence[5] = 0;
+  sp._positive_sequence_curr[0] = 1;
+  sp._positive_sequence_curr[1] = 2;
+  sp._positive_sequence_curr[2] = 4;
+  sp._positive_sequence_curr[3] = 5;
+  sp._positive_sequence_curr[4] = 3;
+  sp._positive_sequence_curr[5] = 0;
 
-  sp._negative_sequence[0] = 3;
-  sp._negative_sequence[1] = 2;
-  sp._negative_sequence[2] = 0;
-  sp._negative_sequence[3] = 1;
-  sp._negative_sequence[4] = 4;
-  sp._negative_sequence[5] = 5;
+  sp._negative_sequence_curr[0] = 3;
+  sp._negative_sequence_curr[1] = 2;
+  sp._negative_sequence_curr[2] = 0;
+  sp._negative_sequence_curr[3] = 1;
+  sp._negative_sequence_curr[4] = 4;
+  sp._negative_sequence_curr[5] = 5;
 }
 
 
@@ -79,35 +89,34 @@ void SequencePairTester::rotate_module() {
   sp._rotate_module(); 
 }
 
-
+/*
 // swap two modules in one sequence
 void SequencePairTester::swap_two_nodes_one_sequence(
   std::vector<int>& sequence) {
  
   sp._swap_two_nodes_one_sequence(sequence); 
 }
-
+*/
 
 // get positive and negative sequences
 std::list<std::vector<int>> SequencePairTester::get_sequences() {
   
   std::list<std::vector<int>> sequences;
-  sequences.emplace_back(sp._positive_sequence);
-  sequences.emplace_back(sp._negative_sequence);
+  sequences.emplace_back(sp._positive_sequence_curr);
+  sequences.emplace_back(sp._negative_sequence_curr);
 
   return sequences;
 }
 
 
 // swap two moduels in both sequences
-void SequencePairTester::swap_two_nodes_two_sequences(
-  std::vector<int>& positive_sequence,
-  std::vector<int>& negative_sequence) {
+void SequencePairTester::swap_two_nodes_two_sequences() {
 
-  sp._swap_two_nodes_two_sequences(positive_sequence, negative_sequence);
+  sp._swap_two_nodes_two_sequences();
 }
 
 
+/*
 // generate a DAG
 graph::DAG SequencePairTester::generate_dag(
   const std::vector<int> positive_sequence,
@@ -116,7 +125,43 @@ graph::DAG SequencePairTester::generate_dag(
 
   return sp._generate_dag(positive_sequence, negative_sequence, is_horizontal);
 }
+*/
 
+
+// get adjacency list
+std::vector<std::vector<size_t>> SequencePairTester::get_adjacency_list() {
+  return sp._adjacency_list;
+}
+
+
+// generate adjacency list
+void SequencePairTester::generate_adjacency_list(
+  const std::vector<int>& positive_sequence, 
+  const std::vector<int>& negative_sequence, 
+  const bool is_horizontal) {
+
+  sp._generate_adjacency_list(
+    positive_sequence, negative_sequence, is_horizontal);
+}
+
+
+// get topology order
+std::vector<int> SequencePairTester::get_topology_order() {
+  sp._get_topology_order();
+
+  return sp._topology_order;
+}
+
+
+/*
+// get longest path
+std::vector<int> SequencePairTester::get_longest_path(
+  const bool is_horizontal) {
+  
+  sp._get_longest_path(is_horizontal);
+  return sp._longest_path;
+}
+*/
 
 
 }
