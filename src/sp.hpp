@@ -7,6 +7,8 @@
 #include <fstream>
 #include <queue>
 #include <utility>
+#include <algorithm>
+#include <iterator>
 //#include "../lib/graph.hpp"
 
 
@@ -99,6 +101,10 @@ class SequencePair{
     std::vector<size_t> _in_degree_horizontal;
 
     std::vector<size_t> _in_degree_vertical;
+
+    size_t _changed_id1;
+
+    size_t _changed_id2;
 
     //std::map<size_t, std::pair<size_t, size_t>> _pn_mapping;
 
@@ -565,8 +571,9 @@ void SequencePair::_pack_helper(const std::vector<int>& positive_sequence,
                                 const bool is_horizontal,
                                 const size_t operation) {
 
+    
+  //std::cout << "pack helper : operation = " << operation << ", is_horizontal = " << is_horizontal << '\n';
   /* 
-  std::cout << "pack helper : operation = " << operation << ", is_horizontal = " << is_horizontal << '\n';
   std::cout << "adjacency list horizontal \n";
   for (size_t i = 0; i < _adjacency_list_horizontal.size(); ++i) {
     for (size_t j = 0; j < _adjacency_list_horizontal[i].size(); ++j) {
@@ -716,25 +723,45 @@ void SequencePair::_swap_two_nodes_positive_sequence() {
     idx2 = static_cast<size_t>(dis(_gen));
   }
   
+   
+  //std::cout << "\noperation 1\n";
+  //for (auto p : _positive_sequence_prop)  std::cout << p << ' ';
   /*
-  std::cout << "\noperation 1\n";
-  for (auto p : _positive_sequence_prop)  std::cout << p << ' ';
   std::cout << "       ";
   for (auto n : _negative_sequence_prop)  std::cout << n << ' ';
   std::cout << '\n';
   */
-  std::swap(_positive_sequence_prop[idx1], _positive_sequence_prop[idx2]);
-  /*
-  for (auto p : _positive_sequence_prop)  std::cout << p << ' ';
-  std::cout << "       ";
-  for (auto n : _negative_sequence_prop)  std::cout << n << ' ';
-  std::cout << '\n';
-  */
+  //std::cout << "idx1 = " << idx1 << ", idx2 = " << idx2 << '\n';
+  
   //size_t id1 = _positive_sequence_prop[idx1];
   //size_t id2 = _positive_sequence_prop[idx2];
+  /*
+  for (size_t i = 0; i < _num_modules; ++i) {
+    std::cout << "[" << i << "].first = " <<  _pn_mapping[i].first << '\n'; 
+  }
+  */
+  /*
+  std::cout << "id1 = " << id1 << ", id2 = " << id2 << '\n';
+  */
+  std::swap(_positive_sequence_prop[idx1], _positive_sequence_prop[idx2]);
+ 
+  _changed_id1 = _positive_sequence_prop[idx1];
+  _changed_id2 = _positive_sequence_prop[idx2]; 
+  //for (auto p : _positive_sequence_prop)  std::cout << p << ' ';
+  //std::cout << '\n';
+  /*
+  for (auto n : _negative_sequence_prop)  std::cout << n << ' ';
+  std::cout << '\n';
+  */
 
   //_pn_mapping[id1].first = idx2;
   //_pn_mapping[id2].first = idx1;
+  /*
+  for (size_t i = 0; i < _num_modules; ++i) {
+    std::cout << "[" << i << "].first = " << _pn_mapping[i].first << '\n'; 
+  }
+  std::cin.get();
+  */
 }
 
 
@@ -749,14 +776,44 @@ void SequencePair::_swap_two_nodes_negative_sequence() {
   while (idx1 == idx2) {
     idx2 = static_cast<size_t>(dis(_gen));
   }
-
-  std::swap(_negative_sequence_prop[idx1], _negative_sequence_prop[idx2]);
-
+  /*
+  std::cout << "\noperation 2\n";
+  //for (auto p : _positive_sequence_prop)  std::cout << p << ' ';
+  //std::cout << "       ";
+  for (auto n : _negative_sequence_prop)  std::cout << n << ' ';
+  std::cout << '\n';
+  
+  std::cout << "idx1 = " << idx1 << ", idx2 = " << idx2 << '\n';
+  */
   //size_t id1 = _negative_sequence_prop[idx1];
   //size_t id2 = _negative_sequence_prop[idx2];
+  
+  //for (size_t i = 0; i < _num_modules; ++i) {
+  //  std::cout << "[" << i << "].second = " << _pn_mapping[i].second << '\n'; 
+  //}
+  //std::cout << "id1 = " << id1 << ", id2 = " << id2 << '\n';
+  //size_t id1 = _negative_sequence_prop[idx1];
+  //size_t id2 = _negative_sequence_prop[idx2];
+  
+  std::swap(_negative_sequence_prop[idx1], _negative_sequence_prop[idx2]);
 
+  _changed_id1 = _negative_sequence_prop[idx1];
+  _changed_id2 = _negative_sequence_prop[idx2];
+  /*
+  for (auto p : _positive_sequence_prop)  std::cout << p << ' ';
+  std::cout << "       ";
+  */
+  //for (auto n : _negative_sequence_prop)  std::cout << n << ' ';
+  //std::cout << '\n';
+  
   //_pn_mapping[id1].second = idx2;
   //_pn_mapping[id2].second = idx1;
+  /*
+  for (size_t i = 0; i < _num_modules; ++i) {
+    std::cout << "[" << i << "].second = " << _pn_mapping[i].second << '\n'; 
+  }
+  std::cin.get();
+  */
 }
 
 
@@ -771,41 +828,79 @@ void SequencePair::_swap_two_nodes_two_sequences() {
   while (pidx1 == pidx2) {
     pidx2 = static_cast<size_t>(dis(_gen));
   }
-
-
+  /*
+  std::cout << "\noperation 3\n";
+  for (auto p : _positive_sequence_prop)  std::cout << p << ' ';
+  std::cout << "       ";
+  for (auto n : _negative_sequence_prop)  std::cout << n << ' ';
+  std::cout << '\n';
+  
+  std::cout << "pidx1 = " << pidx1 << ", pidx2 = " << pidx2 << '\n';
+  */
   //size_t id1 = _positive_sequence_prop[pidx1];
   //size_t id2 = _positive_sequence_prop[pidx2];
   
-  
+  /*
+  for (size_t i = 0; i < _num_modules; ++i) {
+    std::cout << "[" << i << "].first = " <<  _pn_mapping[i].first << ", second = " << _pn_mapping[i].second << '\n'; 
+  }
+  std::cout << "id1 = " << id1 << ", id2 = " << id2 << '\n';
+
+  std::cout << "my nidx1 = " << _pn_mapping[id1].second << ", nidx2 = " << _pn_mapping[id2].second << '\n';
+  */
   //size_t nidx1 = _pn_mapping[id1].second;
   //size_t nidx2 = _pn_mapping[id2].second;
-  size_t nidx1 = _num_modules;
-  size_t nidx2 = _num_modules;
+  size_t nidx1;
+  size_t nidx2;
 
-   
+  std::vector<int>::iterator it;
+  it = std::find(_negative_sequence_prop.begin(), 
+                 _negative_sequence_prop.end(), 
+                 _positive_sequence_prop[pidx1]);
+
+  if (it != _negative_sequence_prop.end()) {
+    nidx1 = std::distance(_negative_sequence_prop.begin(), it);  
+  }
+
+
+  it = std::find(_negative_sequence_prop.begin(), 
+                 _negative_sequence_prop.end(), 
+                 _positive_sequence_prop[pidx2]);
+
+  if (it != _negative_sequence_prop.end()) {
+    nidx2 = std::distance(_negative_sequence_prop.begin(), it);  
+  }
+  /*
   for (size_t i = 0; i < _num_modules; ++i) {
     if (_negative_sequence_prop[i] == _positive_sequence_prop[pidx1]) {
-      nidx1 = pidx1;
+      nidx1 = i;
     }
 
     if (_negative_sequence_prop[i] == _positive_sequence_prop[pidx2]) {
-      nidx2 = pidx2;
+      nidx2 = i;
     }
 
     if ((nidx1 != _num_modules) && (nidx2 != _num_modules)) {
       break;
     }
   }
-  
+  */
+  //std::cout << "old nidx1 = " << nidx1 << ", nidx2 = " << nidx2 << '\n';
   std::swap(_positive_sequence_prop[pidx1], _positive_sequence_prop[pidx2]);
   std::swap(_negative_sequence_prop[nidx1], _negative_sequence_prop[nidx2]);
-
 
   //_pn_mapping[id1].first = pidx2;
   //_pn_mapping[id2].first = pidx1;
 
   //_pn_mapping[id1].second = nidx2;
   //_pn_mapping[id2].second = nidx1;
+  /*
+  for (size_t i = 0; i < _num_modules; ++i) {
+    std::cout << "[" << i << "].first = " <<  _pn_mapping[i].first << ", second = " << _pn_mapping[i].second << '\n'; 
+  }
+
+  std::cin.get();
+  */
 }
 
 
@@ -824,6 +919,8 @@ void SequencePair::_generate_adjacency_list(
   for (auto n : negative_sequence)  std::cout << n << ' ';
   std::cout << '\n';
   */
+
+  std::vector<int>::const_iterator it;
 
   size_t pidx = 0, nidx = 0;
  
@@ -849,28 +946,39 @@ void SequencePair::_generate_adjacency_list(
     size_t node1_id = positive_sequence[pidx];
    
     //nidx = _pn_mapping[node1_id].second;
-    
+  
+    it = std::find(negative_sequence.begin(),
+                   negative_sequence.end(),
+                   node1_id);
+
+    if (it != negative_sequence.end()) {
+      nidx = std::distance(negative_sequence.begin(), it); 
+    }
+    /*
     for (size_t i = 0; i < _num_modules; ++i) {
       if (node1_id == negative_sequence[i]) {
         nidx = i;
         break;
       }
     }
-    
-    _sequence.clear();
+    */
+    //_sequence.clear();
     
     // adjacency_list for horizontal dag
     if (is_horizontal) {
-      for (size_t i = pidx+1; i < _num_modules; ++i) {
-        _sequence.insert(positive_sequence[i]);
-      }
+      //for (size_t i = pidx+1; i < _num_modules; ++i) {
+      //  _sequence.insert(positive_sequence[i]);
+      //}
 
-      original_size = _sequence.size();
-
+      //original_size = _sequence.size();
       for (size_t i = nidx+1; i < _num_modules; ++i) {
-        _sequence.insert(negative_sequence[i]);
-        
-        if (_sequence.size() == original_size) {
+        //_sequence.insert(negative_sequence[i]);
+       
+        it = std::find(positive_sequence.begin() + (pidx+1),
+                       positive_sequence.end(),
+                       negative_sequence[i]); 
+        //if (_sequence.size() == original_size) {
+        if (it != positive_sequence.end()) {
           //std::cout << "node1_id = " << node1_id << '\n';
           //std::cout << "negative_sequence["<< i << "] = " << negative_sequence[i] << '\n';
           _adjacency_list_horizontal[node1_id].emplace_back(negative_sequence[i]);
@@ -881,28 +989,33 @@ void SequencePair::_generate_adjacency_list(
           //std::cout << "after in degree\n";
         }
 
-        original_size = _sequence.size();
+        //original_size = _sequence.size();
       }
     }
 
     // adjacency_list for vertical dag
     else {
       //std::cout << "vertical dag\n";
-      for (size_t i = pidx+1; i < _num_modules; ++i) {
-        _sequence.insert(positive_sequence[i]);
-      }
+      //for (size_t i = pidx+1; i < _num_modules; ++i) {
+      //  _sequence.insert(positive_sequence[i]);
+      //}
 
-      original_size = _sequence.size();
+      //original_size = _sequence.size();
 
       for (int i = nidx-1; i >= 0; --i) {
-        _sequence.insert(negative_sequence[i]);
+        //_sequence.insert(negative_sequence[i]);
         //std::cout << "negative_sequence[" << i << "] = " << negative_sequence[i] << '\n';
-        if (_sequence.size() == original_size) {
+        //if (_sequence.size() == original_size) {
+        it = std::find(positive_sequence.begin() + (pidx+1),
+                       positive_sequence.end(),
+                       negative_sequence[i]);
+
+        if (it != positive_sequence.end()) {
           _adjacency_list_vertical[negative_sequence[i]].emplace_back(node1_id);
           _in_degree_vertical[node1_id] = _in_degree_vertical[node1_id] + 1; 
         }
       
-        original_size = _sequence.size();
+        //original_size = _sequence.size();
       }
     }
 
