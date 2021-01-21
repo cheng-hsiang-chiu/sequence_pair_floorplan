@@ -41,7 +41,9 @@ class SequencePairTester{
       const std::vector<int>& negative_sequence, 
       const bool is_horizontal);
 
-    std::vector<std::vector<size_t>> get_adjacency_list();
+    std::vector<std::vector<size_t>> get_adjacency_list_horizontal();
+    
+    std::vector<std::vector<size_t>> get_adjacency_list_vertical();
     
     std::vector<int> get_longest_path(const bool is_horizontal);
 };
@@ -129,8 +131,16 @@ graph::DAG SequencePairTester::generate_dag(
 
 
 // get adjacency list
-std::vector<std::vector<size_t>> SequencePairTester::get_adjacency_list() {
-  return sp._adjacency_list;
+std::vector<std::vector<size_t>> 
+  SequencePairTester::get_adjacency_list_horizontal() {
+  return sp._adjacency_list_horizontal;
+}
+
+
+// get adjacency list negative
+std::vector<std::vector<size_t>> 
+  SequencePairTester::get_adjacency_list_vertical() {
+  return sp._adjacency_list_vertical;
 }
 
 
@@ -147,7 +157,7 @@ void SequencePairTester::generate_adjacency_list(
 
 // get topology order
 std::vector<int> SequencePairTester::get_topology_order() {
-  sp._get_topology_order();
+  sp._get_topology_order(true);
 
   return sp._topology_order;
 }

@@ -90,11 +90,15 @@ class SequencePair{
     
     std::map<size_t, size_t> _mapping;
 
-    std::vector<std::vector<size_t>> _adjacency_list;
+    std::vector<std::vector<size_t>> _adjacency_list_horizontal;
 
+    std::vector<std::vector<size_t>> _adjacency_list_vertical;
+    
     std::unordered_set<size_t> _sequence;
    
-    std::vector<size_t> _in_degree;
+    std::vector<size_t> _in_degree_horizontal;
+
+    std::vector<size_t> _in_degree_vertical;
 
     //std::map<size_t, std::pair<size_t, size_t>> _pn_mapping;
 
@@ -109,11 +113,13 @@ class SequencePair{
     size_t _generate_neighbors();
 
     size_t _pack(const std::vector<int>& positive_sequence,
-                 const std::vector<int>& negative_sequence);
+                 const std::vector<int>& negative_sequence,
+                 const size_t operation);
 
     void _pack_helper(const std::vector<int>& positive_sequence,
                       const std::vector<int>& negative_sequence, 
-                      const bool is_horizontal);
+                      const bool is_horizontal,
+                      const size_t operation);
 
     void _dump_cost(std::string output_file);
 
@@ -136,7 +142,7 @@ class SequencePair{
       const std::vector<int>& negative_sequence,
       const bool is_horizontal); 
     
-    void _get_topology_order();
+    void _get_topology_order(const bool is_horizontal);
 
     void _get_longest_path(const bool is_horizontal);
 };
@@ -250,13 +256,16 @@ void SequencePair::_dump_cost(const std::string output_file) {
 // generate an initial pair
 void SequencePair::_generate_initial_pair() {
 
-  _adjacency_list.resize(_num_modules);
+  _adjacency_list_horizontal.resize(_num_modules);
+  _adjacency_list_vertical.resize(_num_modules);
   
   for (size_t i = 0; i < _num_modules; ++i) {
-    _adjacency_list.reserve(_num_modules);
+    _adjacency_list_horizontal.reserve(_num_modules);
+    _adjacency_list_vertical.reserve(_num_modules);
   }
 
-  _in_degree.reserve(_num_modules);
+  _in_degree_horizontal.reserve(_num_modules);
+  _in_degree_vertical.reserve(_num_modules);
   _topology_order.reserve(_num_modules);
 
   _positive_sequence_curr.reserve(_num_modules);
@@ -326,7 +335,7 @@ void SequencePair::optimize() {
 
   tbeg = std::chrono::steady_clock::now();
   
-  size_t area = _pack(_positive_sequence_curr, _negative_sequence_curr);
+  size_t area = _pack(_positive_sequence_curr, _negative_sequence_curr, 1);
   
   tend = std::chrono::steady_clock::now();
   
@@ -354,7 +363,7 @@ double SequencePair::_calculate_initial_temperature() {
   for (auto n : negative_sequence_curr)  std::cout << n << ' ';
   std::cout << '\n';
   */
-  size_t area_curr = _pack(_positive_sequence_curr, _negative_sequence_curr);
+  size_t area_curr = _pack(_positive_sequence_curr, _negative_sequence_curr, 1);
   size_t area_prop;
 
   while(num_moves < SP_RANDOM_MOVES) {
@@ -370,7 +379,7 @@ double SequencePair::_calculate_initial_temperature() {
     //for (auto n : negative_sequence_prop)  std::cout << n << ' ';
     //std::cout << '\n';
     
-    area_prop = _pack(_positive_sequence_prop, _negative_sequence_prop);
+    area_prop = _pack(_positive_sequence_prop, _negative_sequence_prop, operation);
 
     delta_area = area_prop > area_curr ? 
                  (area_prop - area_curr) : 
@@ -430,7 +439,7 @@ void SequencePair::_simulated_annealing(const double initial_temperature) {
   double cost;
 
   size_t operation;
-    
+  std::cout << "\nsimulated annealing\n";  
   while (temperature > SP_FROZEN_TEMPERATURE) {
     
     for (size_t iter = 0; iter < SP_MAX_ITERATIONS_PER_TEMPERATURE; iter++) {
@@ -441,7 +450,8 @@ void SequencePair::_simulated_annealing(const double initial_temperature) {
       operation = _generate_neighbors();
       
       area_prop = _pack(_positive_sequence_prop,
-                        _negative_sequence_prop);
+                        _negative_sequence_prop, 
+                        operation);
 
       cost = area_prop < area_curr ?
              (double)-1*(area_curr - area_prop) : 
@@ -522,10 +532,11 @@ size_t SequencePair::_generate_neighbors() {
 
 // pack the modules
 size_t SequencePair::_pack(const std::vector<int>& positive_sequence,
-                           const std::vector<int>& negative_sequence) {
+                           const std::vector<int>& negative_sequence,
+                           const size_t operation) {
  
-  _pack_helper(positive_sequence, negative_sequence, true);
-  _pack_helper(positive_sequence, negative_sequence, false);
+  _pack_helper(positive_sequence, negative_sequence, true, operation);
+  _pack_helper(positive_sequence, negative_sequence, false, operation);
  
   //std::cout << "finished pack helper\n"; 
   size_t urx = 0, ury = 0;
@@ -551,22 +562,71 @@ size_t SequencePair::_pack(const std::vector<int>& positive_sequence,
 // pack helper
 void SequencePair::_pack_helper(const std::vector<int>& positive_sequence, 
                                 const std::vector<int>& negative_sequence,
-                                const bool is_horizontal) {
+                                const bool is_horizontal,
+                                const size_t operation) {
 
-  //if (operation != 0) {
-  //std::cout << "pack helper : operation = " << operation << ", adjacency_list has size = " << _adjacency_list.size() << '\n';
-  //for (size_t i = 0; i < _adjacency_list.size(); ++i) {
-  //  for (size_t j = 0; j < _adjacency_list[i].size(); ++j) {
-  //    std::cout << "[" << i << "][" << j << "] = " << _adjacency_list[i][j] << ", ";
-  //  }
+  /* 
+  std::cout << "pack helper : operation = " << operation << ", is_horizontal = " << is_horizontal << '\n';
+  std::cout << "adjacency list horizontal \n";
+  for (size_t i = 0; i < _adjacency_list_horizontal.size(); ++i) {
+    for (size_t j = 0; j < _adjacency_list_horizontal[i].size(); ++j) {
+      std::cout << "[" << i << "][" << j << "] = " << _adjacency_list_horizontal[i][j] << ", ";
+    }
+  }
+  std::cout << "\nadjacency list vertical \n";
+  for (size_t i = 0; i < _adjacency_list_vertical.size(); ++i) {
+    for (size_t j = 0; j < _adjacency_list_vertical[i].size(); ++j) {
+      std::cout << "[" << i << "][" << j << "] = " << _adjacency_list_vertical[i][j] << ", ";
+    }
+  }
+  std::cout << '\n';
+  for (auto p : positive_sequence) std::cout << p << ' ';
+  std::cout << "      ";
+  for (auto n : negative_sequence) std::cout << n << ' ';
+  std::cout << '\n';
+ 
+  for (auto t : _topology_order)  std::cout << t << ' ';
+  std::cout << '\n'; 
+  for (auto i : _in_degree_horizontal)  std::cout << i << ' ';
+  std::cout << '\n'; 
+  for (auto i : _in_degree_vertical)  std::cout << i << ' ';
+  std::cout << '\n';
+  */ 
+  if (operation != 0) {
+    _generate_adjacency_list(positive_sequence, 
+                             negative_sequence,
+                             is_horizontal);
+  }
+    
+  _get_topology_order(is_horizontal);
+  
+  _get_longest_path(is_horizontal);
+  /*
+  std::cout << "\nafter --- adjacency list horizontal \n";
+  for (size_t i = 0; i < _adjacency_list_horizontal.size(); ++i) {
+    for (size_t j = 0; j < _adjacency_list_horizontal[i].size(); ++j) {
+      std::cout << "[" << i << "][" << j << "] = " << _adjacency_list_horizontal[i][j] << ", ";
+    }
+  }
+  std::cout << "\nafter --- adjacency list vertical \n";
+  for (size_t i = 0; i < _adjacency_list_vertical.size(); ++i) {
+    for (size_t j = 0; j < _adjacency_list_vertical[i].size(); ++j) {
+      std::cout << "[" << i << "][" << j << "] = " << _adjacency_list_vertical[i][j] << ", ";
+    }
+  }
+  std::cout << '\n';
+  for (auto p : positive_sequence) std::cout << p << ' ';
+  std::cout << "      ";
+  for (auto n : negative_sequence) std::cout << n << ' ';
+  std::cout << '\n';
+  for (auto t : _topology_order)  std::cout << t << ' ';
+  std::cout << '\n';
+  for (auto i : _in_degree_horizontal)  std::cout << i << ' '; 
+  for (auto i : _in_degree_vertical)  std::cout << i << ' '; 
+  std::cout << "\n---------------------------------------------------\n";
+  std::cin.get();
+  */
   //}
-  //for (auto p : positive_sequence) std::cout << p << ' ';
-  //std::cout << '\n';
-  //for (auto n : negative_sequence) std::cout << n << ' ';
-  //std::cout << '\n';
-  _generate_adjacency_list(positive_sequence, 
-                           negative_sequence,
-                           is_horizontal);
   //std::cout << "after generate adjacency_list, adjacency_list has size = " << _adjacency_list.size() << '\n';
   //for (size_t i = 0; i < _adjacency_list.size(); ++i) {
   //  for (size_t j = 0; j < _adjacency_list[i].size(); ++j) {
@@ -578,9 +638,6 @@ void SequencePair::_pack_helper(const std::vector<int>& positive_sequence,
   //for (auto n : negative_sequence) std::cout << n << ' ';
   //std::cout << '\n';
   //std::cin.get();
-  _get_topology_order();
-  //}
-  _get_longest_path(is_horizontal);
 
   /* 
   if (is_horizontal) {  
@@ -658,9 +715,21 @@ void SequencePair::_swap_two_nodes_positive_sequence() {
   while (idx1 == idx2) {
     idx2 = static_cast<size_t>(dis(_gen));
   }
-
-  std::swap(_positive_sequence_prop[idx1], _positive_sequence_prop[idx2]);
   
+  /*
+  std::cout << "\noperation 1\n";
+  for (auto p : _positive_sequence_prop)  std::cout << p << ' ';
+  std::cout << "       ";
+  for (auto n : _negative_sequence_prop)  std::cout << n << ' ';
+  std::cout << '\n';
+  */
+  std::swap(_positive_sequence_prop[idx1], _positive_sequence_prop[idx2]);
+  /*
+  for (auto p : _positive_sequence_prop)  std::cout << p << ' ';
+  std::cout << "       ";
+  for (auto n : _negative_sequence_prop)  std::cout << n << ' ';
+  std::cout << '\n';
+  */
   //size_t id1 = _positive_sequence_prop[idx1];
   //size_t id2 = _positive_sequence_prop[idx2];
 
@@ -760,11 +829,20 @@ void SequencePair::_generate_adjacency_list(
  
   size_t original_size = 0;
 
-  _in_degree.clear();
-  _adjacency_list.clear();
-  
-  _in_degree.resize(_num_modules);
-  _adjacency_list.resize(_num_modules);
+  if (is_horizontal) {
+    _adjacency_list_horizontal.clear();
+    _adjacency_list_horizontal.resize(_num_modules);
+    
+    _in_degree_horizontal.clear();
+    _in_degree_horizontal.resize(_num_modules);
+  }
+  else {
+    _adjacency_list_vertical.clear();
+    _adjacency_list_vertical.resize(_num_modules);
+    
+    _in_degree_vertical.clear();
+    _in_degree_vertical.resize(_num_modules);
+  }
  
   while (pidx < _num_modules) {
     
@@ -795,10 +873,11 @@ void SequencePair::_generate_adjacency_list(
         if (_sequence.size() == original_size) {
           //std::cout << "node1_id = " << node1_id << '\n';
           //std::cout << "negative_sequence["<< i << "] = " << negative_sequence[i] << '\n';
-          _adjacency_list[node1_id].emplace_back(negative_sequence[i]);
+          _adjacency_list_horizontal[node1_id].emplace_back(negative_sequence[i]);
           //std::cout << "after adjacency\n";
           //std::cout << "_in_degree has size " << _in_degree.size() << '\n';
-          _in_degree[negative_sequence[i]] = _in_degree[negative_sequence[i]] + 1; 
+          _in_degree_horizontal[negative_sequence[i]] = 
+            _in_degree_horizontal[negative_sequence[i]] + 1; 
           //std::cout << "after in degree\n";
         }
 
@@ -819,8 +898,8 @@ void SequencePair::_generate_adjacency_list(
         _sequence.insert(negative_sequence[i]);
         //std::cout << "negative_sequence[" << i << "] = " << negative_sequence[i] << '\n';
         if (_sequence.size() == original_size) {
-          _adjacency_list[negative_sequence[i]].emplace_back(node1_id);
-          _in_degree[node1_id] = _in_degree[node1_id] + 1; 
+          _adjacency_list_vertical[negative_sequence[i]].emplace_back(node1_id);
+          _in_degree_vertical[node1_id] = _in_degree_vertical[node1_id] + 1; 
         }
       
         original_size = _sequence.size();
@@ -833,15 +912,22 @@ void SequencePair::_generate_adjacency_list(
 
 
 // get topology order of the adjacency_list
-void SequencePair::_get_topology_order() {
+void SequencePair::_get_topology_order(
+  const bool is_horizontal) {
 
   //std::cout << "get_topology_order\n";
-   
+  std::vector<size_t> in_degree;
+  if (is_horizontal) { 
+    in_degree = _in_degree_horizontal; 
+  }
+  else {
+    in_degree = _in_degree_vertical;
+  }
   _topology_order.clear();
 
   std::queue<int> q;
   for (size_t i = 0; i < _num_modules; ++i) {
-    if (_in_degree[i] == 0) {
+    if (in_degree[i] == 0) {
       q.push(i);
     }
   }
@@ -852,9 +938,18 @@ void SequencePair::_get_topology_order() {
 
     _topology_order.emplace_back(n);
 
-    for (size_t i = 0; i < _adjacency_list[n].size(); ++i) {
-      if ((--_in_degree[_adjacency_list[n][i]]) == 0) {
-        q.push(_adjacency_list[n][i]);
+    if (is_horizontal) { 
+      for (size_t i = 0; i < _adjacency_list_horizontal[n].size(); ++i) {
+        if ((--in_degree[_adjacency_list_horizontal[n][i]]) == 0) {
+          q.push(_adjacency_list_horizontal[n][i]);
+        }
+      }
+    }
+    else {
+      for (size_t i = 0; i < _adjacency_list_vertical[n].size(); ++i) {
+        if ((--in_degree[_adjacency_list_vertical[n][i]]) == 0) {
+          q.push(_adjacency_list_vertical[n][i]);
+        }
       }
     }
   }
@@ -882,40 +977,43 @@ void SequencePair::_get_longest_path(const bool is_horizontal) {
 
   for (size_t i = 0; i < _num_modules; ++i) {
     size_t sid = _topology_order[i];
-    for (size_t j = 0; j < _adjacency_list[sid].size(); ++j) {
-      //std::cout << sid << '\n'; 
-      if (is_horizontal) {
+
+    if (is_horizontal) {
+      for (size_t j = 0; j < _adjacency_list_horizontal[sid].size(); ++j) {
+        //std::cout << sid << '\n'; 
         cost = _modules[_mapping.at(sid)].width;
         
-        if (_modules[_mapping.at(_adjacency_list[sid][j])].llx < 
+        if (_modules[_mapping.at(_adjacency_list_horizontal[sid][j])].llx < 
             _modules[_mapping.at(sid)].llx + cost) {
 
-          _modules[_mapping.at(_adjacency_list[sid][j])].llx = 
+          _modules[_mapping.at(_adjacency_list_horizontal[sid][j])].llx = 
             _modules[_mapping.at(sid)].llx + cost;
         }
         //std::cout << "_modules[" << _mapping.at(_adjacency_list[sid][j]) << "].llx = " << _modules[_mapping.at(_adjacency_list[sid][j])].llx << '\n'; 
       }
-      else {
+    }
+    else {
+      for (size_t j = 0; j < _adjacency_list_vertical[sid].size(); ++j) {
         cost = _modules[_mapping.at(sid)].height;
         
-        if (_modules[_mapping.at(_adjacency_list[sid][j])].lly < 
+        if (_modules[_mapping.at(_adjacency_list_vertical[sid][j])].lly < 
             _modules[_mapping.at(sid)].lly + cost) {
           
-          _modules[_mapping.at(_adjacency_list[sid][j])].lly = 
+          _modules[_mapping.at(_adjacency_list_vertical[sid][j])].lly = 
             _modules[_mapping.at(sid)].lly + cost;
         }
-        //std::cout << "_modules[" << _mapping.at(_adjacency_list[sid][j]) << "].lly = " << _modules[_mapping.at(_adjacency_list[sid][j])].lly << '\n'; 
+          //std::cout << "_modules[" << _mapping.at(_adjacency_list[sid][j]) << "].lly = " << _modules[_mapping.at(_adjacency_list[sid][j])].lly << '\n'; 
       }
-      //std::cout << "cost = " << cost << '\n';
-      //std::cout << "longest_path[" << sid << "] = " << _longest_path[sid] << '\n';
-      /*
-      if (_longest_path[_adjacency_list[sid][j]] < 
-          _longest_path[sid] + cost) {
+        //std::cout << "cost = " << cost << '\n';
+        //std::cout << "longest_path[" << sid << "] = " << _longest_path[sid] << '\n';
+        /*
+        if (_longest_path[_adjacency_list[sid][j]] < 
+            _longest_path[sid] + cost) {
 
-        _longest_path[_adjacency_list[sid][j]] = 
-          _longest_path[sid] + cost;
-      }
-      */
+          _longest_path[_adjacency_list[sid][j]] = 
+            _longest_path[sid] + cost;
+        }
+        */
     }
   }
 }

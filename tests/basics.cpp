@@ -216,6 +216,8 @@ TEST_CASE("swap_nodes_in_two_sequences" * doctest::timeout(300)) {
 }
 */
 
+
+/*
 TEST_CASE("generate_adjacency_list" * doctest::timeout(300)) {
 
   sp::SequencePairTester tester;
@@ -285,6 +287,7 @@ TEST_CASE("generate_adjacency_list" * doctest::timeout(300)) {
     REQUIRE(adjacency_list[3][3] == 5);
   }
 }
+*/
 
 
 TEST_CASE("get_topology_order" * doctest::timeout(300)) {
