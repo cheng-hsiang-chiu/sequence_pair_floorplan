@@ -4,7 +4,7 @@
 #include "../src/sp_tester.hpp"
 
 
-
+/*
 TEST_CASE("rotate_module" * doctest::timeout(300)) {
   
   sp::SequencePairTester tester;
@@ -43,7 +43,7 @@ TEST_CASE("rotate_module" * doctest::timeout(300)) {
     }
   }
 }
-
+*/
 /*
 TEST_CASE("swap_nodes_in_one_sequence" * doctest::timeout(300)) {
   
@@ -289,7 +289,7 @@ TEST_CASE("generate_adjacency_list" * doctest::timeout(300)) {
 }
 */
 
-
+/*
 TEST_CASE("get_topology_order" * doctest::timeout(300)) {
 
   sp::SequencePairTester tester;
@@ -358,7 +358,7 @@ TEST_CASE("get_topology_order" * doctest::timeout(300)) {
     REQUIRE(idx0 < idx1);
   }
 }
-
+*/
 /*
 TEST_CASE("get_longest_path" * doctest::timeout(300)) {
   
@@ -417,3 +417,4 @@ TEST_CASE("get_longest_path" * doctest::timeout(300)) {
   }
 }
 */
+

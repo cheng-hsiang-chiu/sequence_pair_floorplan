@@ -1,7 +1,6 @@
 #include <iostream>
 #include <vector>
 #include <random>
-#include <unordered_set>
 #include <map>
 #include <chrono>
 #include <fstream>
@@ -11,8 +10,6 @@
 #include <iterator>
 #include <cassert>
 //#include "../lib/graph.hpp"
-
-
 
 
 #define SP_FROZEN_TEMPERATURE 0.1
@@ -50,10 +47,10 @@ class SequencePair{
 
     void dump(std::ostream& os) const;
     
-    void dump_json(std::string output_file);
+    void dump_json(std::string output_file) const;
 
   private:
-    size_t _num_modules;
+    size_t _num_modules = 0;
      
     std::string _input_file;
 
@@ -61,17 +58,17 @@ class SequencePair{
 
     std::vector<Node> _modules_best;
 
-    std::vector<int> _positive_sequence_curr;
+    std::vector<size_t> _positive_sequence_curr;
 
-    std::vector<int> _negative_sequence_curr;
+    std::vector<size_t> _negative_sequence_curr;
 
-    std::vector<int> _positive_sequence_prop;
+    std::vector<size_t> _positive_sequence_prop;
 
-    std::vector<int> _negative_sequence_prop;
+    std::vector<size_t> _negative_sequence_prop;
     
-    std::vector<int> _positive_sequence_best;
+    std::vector<size_t> _positive_sequence_best;
 
-    std::vector<int> _negative_sequence_best;
+    std::vector<size_t> _negative_sequence_best;
     
     std::random_device _rd;
 
@@ -81,11 +78,11 @@ class SequencePair{
 
     size_t _ury = 0;
 
-    std::vector<int> _topology_order;
+    std::vector<size_t> _topology_order;
 
     //graph::DAG _dag;
 
-    std::vector<int> _cost;
+    std::vector<size_t> _cost;
 
     //std::vector<graph::Node> _all_nodes;
     
@@ -97,18 +94,21 @@ class SequencePair{
 
     std::vector<std::vector<size_t>> _adjacency_list_vertical;
     
-    std::unordered_set<size_t> _sequence;
-   
     std::vector<size_t> _in_degree_horizontal;
 
     std::vector<size_t> _in_degree_vertical;
+    
     std::vector<size_t> _in_degree;
-    std::queue<int> _queue;
+    
+    std::queue<size_t> _queue;
 
+    std::vector<size_t> _seq;
+    
     size_t _changed_id1;
 
     size_t _changed_id2;
 
+    std::vector<bool> _is_exist;
     //std::map<size_t, std::pair<size_t, size_t>> _pn_mapping;
 
 
@@ -121,16 +121,16 @@ class SequencePair{
 
     size_t _generate_neighbors();
 
-    size_t _pack(const std::vector<int>& positive_sequence,
-                 const std::vector<int>& negative_sequence,
+    size_t _pack(const std::vector<size_t>& positive_sequence,
+                 const std::vector<size_t>& negative_sequence,
                  const size_t operation);
 
-    void _pack_helper(const std::vector<int>& positive_sequence,
-                      const std::vector<int>& negative_sequence, 
+    void _pack_helper(const std::vector<size_t>& positive_sequence,
+                      const std::vector<size_t>& negative_sequence, 
                       const bool is_horizontal,
                       const size_t operation);
 
-    void _dump_cost(std::string output_file);
+    void _dump_cost(std::string output_file) const;
 
     void _rotate_module();
 
@@ -147,8 +147,8 @@ class SequencePair{
       const bool is_horizontal) const;
     */
     void _generate_adjacency_list(
-      const std::vector<int>& positive_sequence,
-      const std::vector<int>& negative_sequence,
+      const std::vector<size_t>& positive_sequence,
+      const std::vector<size_t>& negative_sequence,
       const bool is_horizontal); 
     
     void _get_topology_order(const bool is_horizontal);
@@ -185,6 +185,7 @@ void SequencePair::open(const std::string input_file) {
     _modules.emplace_back(id, width, height, 0, 0);
     _mapping.emplace(id, index++);
   }
+
   std::cout << "Modules are successfully opened!!\n";
 }
 
@@ -192,7 +193,7 @@ void SequencePair::open(const std::string input_file) {
 // dump floorplan to console
 void SequencePair::dump(std::ostream& os) const {
 
-  for (size_t i = 0; i < _modules.size(); ++i) {
+  for (size_t i = 0; i < _num_modules; ++i) {
     os << _modules[i].id     << ' '
        << _modules[i].llx    << ' '
        << _modules[i].lly    << ' '
@@ -204,17 +205,17 @@ void SequencePair::dump(std::ostream& os) const {
 
 // dump floorplan to a file with a json extesion
 // not yet finished
-void SequencePair::dump_json(std::string output_file) {
+void SequencePair::dump_json(std::string output_file) const {
  
   _dump_cost(output_file);
    
-  if(output_file.rfind(".json") == std::string::npos) {
+  if (output_file.rfind(".json") == std::string::npos) {
     output_file.append(".json");
   }
   
   std::ofstream outfile(output_file, std::ios::out);
  
-  if(!outfile) {
+  if (!outfile) {
     std::cerr << "File could not be opened for writing\n";
     std::exit(EXIT_FAILURE); 
   }
@@ -236,10 +237,13 @@ void SequencePair::dump_json(std::string output_file) {
             << ",\"lly\":"    << _modules[i].lly
             << ",\"width\":"  << _modules[i].width
             << ",\"height\":" << _modules[i].height;
-    if(i == _num_modules-1)
+    
+    if(i == _num_modules-1) {
       outfile << "}";
-    else
+    }
+    else {
       outfile << "},";
+    }
   }
 
   outfile << "]}"; 
@@ -247,11 +251,11 @@ void SequencePair::dump_json(std::string output_file) {
 
 
 // dump the cost 
-void SequencePair::_dump_cost(const std::string output_file) {
+void SequencePair::_dump_cost(const std::string output_file) const {
   
   std::ofstream outfile(output_file+"_cost.txt", std::ios::out);
     
-  if(!outfile) {
+  if (!outfile) {
     std::cerr << "File could not be opened for writing\n";
     std::exit(EXIT_FAILURE); 
   }
@@ -269,24 +273,25 @@ void SequencePair::_generate_initial_pair() {
   _adjacency_list_vertical.resize(_num_modules);
   
   for (size_t i = 0; i < _num_modules; ++i) {
-    _adjacency_list_horizontal.reserve(_num_modules);
-    _adjacency_list_vertical.reserve(_num_modules);
+    _adjacency_list_horizontal.resize(_num_modules);
+    _adjacency_list_vertical.resize(_num_modules);
   }
 
-  _in_degree_horizontal.reserve(_num_modules);
-  _in_degree_vertical.reserve(_num_modules);
-  _topology_order.reserve(_num_modules);
+  _in_degree_horizontal.resize(_num_modules);
+  _in_degree_vertical.resize(_num_modules);
+  _topology_order.resize(_num_modules);
+  _is_exist.resize(_num_modules);
 
-  _positive_sequence_curr.reserve(_num_modules);
-  _negative_sequence_curr.reserve(_num_modules);
-  _positive_sequence_prop.reserve(_num_modules);
-  _negative_sequence_prop.reserve(_num_modules);
-  _positive_sequence_best.reserve(_num_modules);
-  _negative_sequence_best.reserve(_num_modules);
+  _positive_sequence_curr.resize(_num_modules);
+  _negative_sequence_curr.resize(_num_modules);
+  _positive_sequence_prop.resize(_num_modules);
+  _negative_sequence_prop.resize(_num_modules);
+  _positive_sequence_best.resize(_num_modules);
+  _negative_sequence_best.resize(_num_modules);
 
-  for (size_t i = 0; i < _num_modules; ++i) {
-    _positive_sequence_curr.emplace_back(_modules[i].id);
-    _negative_sequence_curr.emplace_back(_modules[i].id);
+  for (size_t i = 0; i < _num_modules; ++i) {    
+    _positive_sequence_curr.at(i) = _modules[i].id;
+    _negative_sequence_curr.at(i) = _modules[i].id;
     //_pn_mapping[i] = std::make_pair(i, i);
   }
 
@@ -375,7 +380,7 @@ double SequencePair::_calculate_initial_temperature() {
   size_t area_curr = _pack(_positive_sequence_curr, _negative_sequence_curr, 1);
   size_t area_prop;
 
-  while(num_moves < SP_RANDOM_MOVES) {
+  while (num_moves < SP_RANDOM_MOVES) {
     //std::cout << "before generate neighbors\n";
     //for (auto p : positive_sequence_prop)  std::cout << p << ' ';
     //std::cout << '\n';
@@ -443,12 +448,12 @@ void SequencePair::_simulated_annealing(const double initial_temperature) {
   
   size_t area_curr = area_best; 
  
-  size_t area_prop;
+  size_t area_prop = area_curr;
   
-  double cost;
+  double cost = 0;
 
-  size_t operation;
-  std::cout << "\nsimulated annealing\n";  
+  size_t operation = 0;
+    
   while (temperature > SP_FROZEN_TEMPERATURE) {
     
     for (size_t iter = 0; iter < SP_MAX_ITERATIONS_PER_TEMPERATURE; iter++) {
@@ -514,7 +519,7 @@ void SequencePair::_simulated_annealing(const double initial_temperature) {
 size_t SequencePair::_generate_neighbors() {
 
   std::uniform_real_distribution<> dis(0.0, 4.0);
-  int choice = dis(_gen);
+  size_t choice = static_cast<size_t>(dis(_gen));
 
   switch(choice) {
     
@@ -523,11 +528,11 @@ size_t SequencePair::_generate_neighbors() {
       break;
     
     case 1:
-        _swap_two_nodes_positive_sequence();
+      _swap_two_nodes_positive_sequence();
       break;
 
     case 2:
-        _swap_two_nodes_negative_sequence();
+      _swap_two_nodes_negative_sequence();
       break;
 
     case 3:
@@ -540,8 +545,8 @@ size_t SequencePair::_generate_neighbors() {
 
 
 // pack the modules
-size_t SequencePair::_pack(const std::vector<int>& positive_sequence,
-                           const std::vector<int>& negative_sequence,
+size_t SequencePair::_pack(const std::vector<size_t>& positive_sequence,
+                           const std::vector<size_t>& negative_sequence,
                            const size_t operation) {
  
   _pack_helper(positive_sequence, negative_sequence, true, operation);
@@ -550,7 +555,7 @@ size_t SequencePair::_pack(const std::vector<int>& positive_sequence,
   //std::cout << "finished pack helper\n"; 
   size_t urx = 0, ury = 0;
   
-  for (size_t i = 0; i < _modules.size(); ++i) {
+  for (size_t i = 0; i < _num_modules; ++i) {
     
     if (_modules[i].llx + _modules[i].width > urx) {      
       urx = _modules[i].llx + _modules[i].width;
@@ -569,8 +574,8 @@ size_t SequencePair::_pack(const std::vector<int>& positive_sequence,
 
 
 // pack helper
-void SequencePair::_pack_helper(const std::vector<int>& positive_sequence, 
-                                const std::vector<int>& negative_sequence,
+void SequencePair::_pack_helper(const std::vector<size_t>& positive_sequence, 
+                                const std::vector<size_t>& negative_sequence,
                                 const bool is_horizontal,
                                 const size_t operation) {
 
@@ -853,27 +858,24 @@ void SequencePair::_swap_two_nodes_two_sequences() {
   */
   //size_t nidx1 = _pn_mapping[id1].second;
   //size_t nidx2 = _pn_mapping[id2].second;
-  size_t nidx1;
-  size_t nidx2;
 
-  std::vector<int>::iterator it;
+  std::vector<size_t>::iterator it;
+  
   it = std::find(_negative_sequence_prop.begin(), 
                  _negative_sequence_prop.end(), 
                  _positive_sequence_prop[pidx1]);
 
-  // TODO: ?
-  if (it != _negative_sequence_prop.end()) {
-    nidx1 = std::distance(_negative_sequence_prop.begin(), it);  
-  }
-
+  assert (it != _negative_sequence_prop.end());
+  
+  size_t nidx1 = std::distance(_negative_sequence_prop.begin(), it);  
 
   it = std::find(_negative_sequence_prop.begin(), 
                  _negative_sequence_prop.end(), 
                  _positive_sequence_prop[pidx2]);
 
-  if (it != _negative_sequence_prop.end()) {
-    nidx2 = std::distance(_negative_sequence_prop.begin(), it);  
-  }
+  assert (it != _negative_sequence_prop.end());
+  
+  size_t nidx2 = std::distance(_negative_sequence_prop.begin(), it);  
   /*
   for (size_t i = 0; i < _num_modules; ++i) {
     if (_negative_sequence_prop[i] == _positive_sequence_prop[pidx1]) {
@@ -912,8 +914,8 @@ void SequencePair::_swap_two_nodes_two_sequences() {
 // TODO----------------------------------------------------------- update in_degree
 // generate adjacency_list
 void SequencePair::_generate_adjacency_list(
-  const std::vector<int>& positive_sequence,
-  const std::vector<int>& negative_sequence,
+  const std::vector<size_t>& positive_sequence,
+  const std::vector<size_t>& negative_sequence,
   const bool is_horizontal) {
 
   //std::cout << "generate_adjacency_list\n";
@@ -924,45 +926,60 @@ void SequencePair::_generate_adjacency_list(
   std::cout << '\n';
   */
 
-  std::vector<int>::const_iterator it;
+  std::vector<size_t>::const_iterator it;
 
   size_t pidx = 0, nidx = 0;
  
-  size_t original_size = 0;
-
   if (is_horizontal) {
     //_adjacency_list_horizontal.clear();
-    _adjacency_list_horizontal.resize(_num_modules);
-    for(auto& list : _adjacency_list_horizontal) list.clear();
+    //_adjacency_list_horizontal.resize(_num_modules);
+    
+    for (auto& list : _adjacency_list_horizontal) list.clear();
     
     // TODO: duplicate?
     //_in_degree_horizontal.clear();
-    _in_degree_horizontal.resize(_num_modules);
+    //_in_degree_horizontal.resize(_num_modules);
+    
+    for (size_t i = 0; i < _num_modules; ++i) {
+      _in_degree_horizontal.at(i) = 0;
+    }
+    
   }
   else {
     //_adjacency_list_vertical.clear();
     //_adjacency_list_vertical.resize(_num_modules);
-    _adjacency_list_vertical.resize(_num_modules);
-    for(auto& list : _adjacency_list_vertical) list.clear();
+    //_adjacency_list_vertical.resize(_num_modules);
+    
+    for (auto& list : _adjacency_list_vertical) list.clear();
     
     // TODO: duplicate?
     //_in_degree_vertical.clear();
-    _in_degree_vertical.resize(_num_modules);
+    //_in_degree_vertical.resize(_num_modules);
+    for (size_t i = 0; i < _num_modules; ++i) {
+      _in_degree_vertical.at(i) = 0;
+    }
   }
- 
+
+  _is_exist.clear();
+   
+  for (size_t i = 1; i < _num_modules; ++i) {
+      _is_exist[positive_sequence[i]] = true;
+  }
+  
   while (pidx < _num_modules) {
     
     size_t node1_id = positive_sequence[pidx];
    
     //nidx = _pn_mapping[node1_id].second;
-  
+    _is_exist[node1_id] = false;
+    
     it = std::find(negative_sequence.begin(),
                    negative_sequence.end(),
                    node1_id);
 
-    if (it != negative_sequence.end()) {
-      nidx = std::distance(negative_sequence.begin(), it); 
-    }
+    assert(it != negative_sequence.end());
+    
+    nidx = std::distance(negative_sequence.begin(), it); 
     /*
     for (size_t i = 0; i < _num_modules; ++i) {
       if (node1_id == negative_sequence[i]) {
@@ -972,6 +989,7 @@ void SequencePair::_generate_adjacency_list(
     }
     */
     //_sequence.clear();
+
     
     // adjacency_list for horizontal dag
     if (is_horizontal) {
@@ -984,18 +1002,21 @@ void SequencePair::_generate_adjacency_list(
         //_sequence.insert(negative_sequence[i]);
         
         // TODO: I think this can be reduced from N^2 to N?
+        /*
         it = std::find(positive_sequence.begin() + (pidx+1),
                        positive_sequence.end(),
                        negative_sequence[i]); 
+        */
         //if (_sequence.size() == original_size) {
-        if (it != positive_sequence.end()) {
+        //if (it != positive_sequence.end()) {
+        if (_is_exist[negative_sequence[i]]) {
           //std::cout << "node1_id = " << node1_id << '\n';
           //std::cout << "negative_sequence["<< i << "] = " << negative_sequence[i] << '\n';
           _adjacency_list_horizontal[node1_id].emplace_back(negative_sequence[i]);
           //std::cout << "after adjacency\n";
           //std::cout << "_in_degree has size " << _in_degree.size() << '\n';
-          _in_degree_horizontal[negative_sequence[i]] = 
-            _in_degree_horizontal[negative_sequence[i]] + 1; 
+          _in_degree_horizontal.at(negative_sequence[i]) = 
+            _in_degree_horizontal.at(negative_sequence[i]) + 1; 
           //std::cout << "after in degree\n";
         }
 
@@ -1012,18 +1033,20 @@ void SequencePair::_generate_adjacency_list(
 
       //original_size = _sequence.size();
       //
-      assert(nidx != 0);
+      //assert(nidx != 0);
 
       // TODO: bug?
-      for (int i = nidx-1; i >= 0; --i) {
+      for (int i = static_cast<int>(nidx)-1; i >= 0; --i) {
         //_sequence.insert(negative_sequence[i]);
         //std::cout << "negative_sequence[" << i << "] = " << negative_sequence[i] << '\n';
         //if (_sequence.size() == original_size) {
+        /*
         it = std::find(positive_sequence.begin() + (pidx+1),
                        positive_sequence.end(),
                        negative_sequence[i]);
-
-        if (it != positive_sequence.end()) {
+        */
+        if (_is_exist[negative_sequence[i]]) {
+        //if (it != positive_sequence.end()) {
           _adjacency_list_vertical[negative_sequence[i]].emplace_back(node1_id);
           _in_degree_vertical[node1_id] = _in_degree_vertical[node1_id] + 1; 
         }
@@ -1048,6 +1071,7 @@ void SequencePair::_get_topology_order(
   else {
     _in_degree = _in_degree_vertical;
   }
+
   _topology_order.clear();
 
 
@@ -1058,18 +1082,22 @@ void SequencePair::_get_topology_order(
   }
 
   while (!_queue.empty()) {
-    int n = _queue.front();
+    
+    size_t n = _queue.front();
+    
     _queue.pop();
 
     _topology_order.emplace_back(n);
 
     if (is_horizontal) { 
+      
       for (size_t i = 0; i < _adjacency_list_horizontal[n].size(); ++i) {
         if ((--_in_degree[_adjacency_list_horizontal[n][i]]) == 0) {
           _queue.push(_adjacency_list_horizontal[n][i]);
         }
       }
     }
+
     else {
       for (size_t i = 0; i < _adjacency_list_vertical[n].size(); ++i) {
         if ((--_in_degree[_adjacency_list_vertical[n][i]]) == 0) {
@@ -1101,6 +1129,7 @@ void SequencePair::_get_longest_path(const bool is_horizontal) {
   size_t cost = 0;
 
   for (size_t i = 0; i < _num_modules; ++i) {
+    
     size_t sid = _topology_order[i];
 
     if (is_horizontal) {
@@ -1144,168 +1173,6 @@ void SequencePair::_get_longest_path(const bool is_horizontal) {
 }
 
 
-/*
-// generate a DAG
-graph::DAG SequencePair::_generate_dag(
-  const std::vector<int>& positive_sequence,
-  const std::vector<int>& negative_sequence,
-  const bool is_horizontal) const {
-
-  graph::DAG dag(positive_sequence.size());
-  //graph::Node node1(0, 0);
-  //graph::Node node2(0, 0);
-   
-  int pidx = 0, nidx = 0;
-
-  std::unordered_set<int> sequence;
-
-  while (pidx < positive_sequence.size()) {
-    
-    //std::unordered_set<int> sequence;
-    sequence.clear();
-    
-    size_t node1_id = positive_sequence[pidx]; 
-    size_t node1_cost;
-
-    //auto found = _mapping.find(node1_id);
-    
-    //if (found != _mapping.end()) {
-    if (is_horizontal) {
-      node1_cost = _modules[_mapping.at(node1_id)].width;
-    }
-    else {
-      node1_cost = _modules[_mapping.at(node1_id)].height;
-    }
-  
-    //else {
-    //  std::cerr << "Wrong positive_sequence";
-    //  std::exit(EXIT_FAILURE);
-    //}
-     
-    //for (size_t i = 0; i < _num_modules; ++i) {
-      
-      //if (node1_id == _modules[i].id) {
-        
-        //if (is_horizontal) {
-          //node1_cost = _modules[i].width; 
-        //}
-        //else {
-          //node1_cost = _modules[i].height;
-        //}
-
-        //break;
-      //}
-    //}
-    
-    graph::Node node1(node1_id, node1_cost);
-    //std::cout << "node1 at " << &node1 << '\n';
-    //node1.set_id(node1_id);
-    //node1.set_cost(node1_cost);
-
-    for (size_t i = pidx+1; i < positive_sequence.size(); i++) {
-      sequence.insert(positive_sequence[i]);
-    }
-
-    for (size_t i = 0; i < negative_sequence.size(); ++i) {
-    
-      if (positive_sequence[pidx] == negative_sequence[i]) {
-        nidx = i;
-        break;
-      }
-    }
-
-    // horizontal dag
-    if (is_horizontal) {
-    
-      for (size_t i = nidx+1; i < negative_sequence.size(); ++i) {
-        
-        size_t original_size = sequence.size();
-        
-        sequence.insert(negative_sequence[i]);
-        
-        if (original_size == sequence.size()) {
-          size_t node2_id = negative_sequence[i]; 
-          size_t node2_cost;
-          
-          //auto found = _mapping.find(node2_id);
-          
-          //if (found != _mapping.end()) {
-          node2_cost = _modules[_mapping.at(node2_id)].width;
-          //}
-          //else {
-          //  std::cerr << "Wrong negative_sequence";
-          //  std::exit(EXIT_FAILURE);
-          //}
-
-
-          // TODO: optimize this out...
-          
-          //for (size_t i = 0; i < _modules.size(); ++i) {
-            //if (node2_id == _modules[i].id) {
-              //node2_cost = _modules[i].width; 
-              //break;
-            //}
-          //}
-          
-
-          graph::Node node2(node2_id, node2_cost);
-          //std::cout << "node2 at " << &node2 << '\n';
-          dag.add_edge(node1, node2);
-        }
-      }
-    }
-
-    // vertical dag
-    else {
-      //std::cout << "vertical dag with nidx = " << nidx << " \n";
-
-      for (int i = nidx-1; i >= 0; --i) {
-        
-        size_t original_size = sequence.size();
-        
-        sequence.insert(negative_sequence[i]);
-        
-        if (original_size == sequence.size()) {
-          //std::cout << "nidx = " << nidx << " and i = " << i << '\n';
-          size_t node2_id = negative_sequence[i]; 
-          size_t node2_cost;
-
-          //auto found = _mapping.find(node2_id);
-          
-          //if (found != _mapping.end()) {
-          node2_cost = _modules[_mapping.at(node2_id)].height;
-          //}
-          //else {
-          //  std::cerr << "Wrong negative_sequence";
-          //  std::exit(EXIT_FAILURE);
-          //}
-
-          
-          //for (size_t i = 0; i < _modules.size(); ++i) {
-          //  if (node2_id == _modules[i].id) {
-          //    node2_cost = _modules[i].height;
-          //    break;
-          //  }
-          //}
-          
-     
-          graph::Node node2(node2_id, node2_cost);
-          //std::cout << "node2 at " << &node2 << '\n';
-          dag.add_edge(node2, node1);
-        }
-      }
-    }
-    ++pidx;
-  }
-  //dag.dump(std::cout);
-  
-  //std::vector<graph::Node*> all_nodes = dag.get_nodes();
-  //for (size_t i = 0; i < all_nodes.size(); ++i)
-    //std::cout << all_nodes[i]->id << " has cost = " << all_nodes[i]->cost << '\n';
-  
-  return dag;
-}
-*/
 
 
 

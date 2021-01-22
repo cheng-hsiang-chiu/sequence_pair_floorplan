@@ -24,7 +24,7 @@ class SequencePairTester{
 
     //void swap_two_nodes_one_sequence(std::vector<int>& sequence);
 
-    std::list<std::vector<int>> get_sequences();
+    std::list<std::vector<size_t>> get_sequences();
     
     void swap_two_nodes_two_sequences();
 
@@ -34,18 +34,18 @@ class SequencePairTester{
       const std::vector<int> negative_sequence,
       const bool is_horizontal) const;
     */
-    std::vector<int> get_topology_order();
+    std::vector<size_t> get_topology_order();
 
     void generate_adjacency_list(
-      const std::vector<int>& positive_sequence, 
-      const std::vector<int>& negative_sequence, 
+      const std::vector<size_t>& positive_sequence, 
+      const std::vector<size_t>& negative_sequence, 
       const bool is_horizontal);
 
     std::vector<std::vector<size_t>> get_adjacency_list_horizontal();
     
     std::vector<std::vector<size_t>> get_adjacency_list_vertical();
     
-    std::vector<int> get_longest_path(const bool is_horizontal);
+    std::vector<size_t> get_longest_path(const bool is_horizontal);
 };
 
 
@@ -101,9 +101,9 @@ void SequencePairTester::swap_two_nodes_one_sequence(
 */
 
 // get positive and negative sequences
-std::list<std::vector<int>> SequencePairTester::get_sequences() {
+std::list<std::vector<size_t>> SequencePairTester::get_sequences() {
   
-  std::list<std::vector<int>> sequences;
+  std::list<std::vector<size_t>> sequences;
   sequences.emplace_back(sp._positive_sequence_curr);
   sequences.emplace_back(sp._negative_sequence_curr);
 
@@ -146,8 +146,8 @@ std::vector<std::vector<size_t>>
 
 // generate adjacency list
 void SequencePairTester::generate_adjacency_list(
-  const std::vector<int>& positive_sequence, 
-  const std::vector<int>& negative_sequence, 
+  const std::vector<size_t>& positive_sequence, 
+  const std::vector<size_t>& negative_sequence, 
   const bool is_horizontal) {
 
   sp._generate_adjacency_list(
@@ -156,7 +156,7 @@ void SequencePairTester::generate_adjacency_list(
 
 
 // get topology order
-std::vector<int> SequencePairTester::get_topology_order() {
+std::vector<size_t> SequencePairTester::get_topology_order() {
   sp._get_topology_order(true);
 
   return sp._topology_order;
