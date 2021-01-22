@@ -9,6 +9,7 @@
 #include <utility>
 #include <algorithm>
 #include <iterator>
+#include <cassert>
 //#include "../lib/graph.hpp"
 
 
@@ -101,6 +102,8 @@ class SequencePair{
     std::vector<size_t> _in_degree_horizontal;
 
     std::vector<size_t> _in_degree_vertical;
+    std::vector<size_t> _in_degree;
+    std::queue<int> _queue;
 
     size_t _changed_id1;
 
@@ -858,6 +861,7 @@ void SequencePair::_swap_two_nodes_two_sequences() {
                  _negative_sequence_prop.end(), 
                  _positive_sequence_prop[pidx1]);
 
+  // TODO: ?
   if (it != _negative_sequence_prop.end()) {
     nidx1 = std::distance(_negative_sequence_prop.begin(), it);  
   }
@@ -927,17 +931,22 @@ void SequencePair::_generate_adjacency_list(
   size_t original_size = 0;
 
   if (is_horizontal) {
-    _adjacency_list_horizontal.clear();
+    //_adjacency_list_horizontal.clear();
     _adjacency_list_horizontal.resize(_num_modules);
+    for(auto& list : _adjacency_list_horizontal) list.clear();
     
-    _in_degree_horizontal.clear();
+    // TODO: duplicate?
+    //_in_degree_horizontal.clear();
     _in_degree_horizontal.resize(_num_modules);
   }
   else {
-    _adjacency_list_vertical.clear();
+    //_adjacency_list_vertical.clear();
+    //_adjacency_list_vertical.resize(_num_modules);
     _adjacency_list_vertical.resize(_num_modules);
+    for(auto& list : _adjacency_list_vertical) list.clear();
     
-    _in_degree_vertical.clear();
+    // TODO: duplicate?
+    //_in_degree_vertical.clear();
     _in_degree_vertical.resize(_num_modules);
   }
  
@@ -973,7 +982,8 @@ void SequencePair::_generate_adjacency_list(
       //original_size = _sequence.size();
       for (size_t i = nidx+1; i < _num_modules; ++i) {
         //_sequence.insert(negative_sequence[i]);
-       
+        
+        // TODO: I think this can be reduced from N^2 to N?
         it = std::find(positive_sequence.begin() + (pidx+1),
                        positive_sequence.end(),
                        negative_sequence[i]); 
@@ -1001,7 +1011,10 @@ void SequencePair::_generate_adjacency_list(
       //}
 
       //original_size = _sequence.size();
+      //
+      assert(nidx != 0);
 
+      // TODO: bug?
       for (int i = nidx-1; i >= 0; --i) {
         //_sequence.insert(negative_sequence[i]);
         //std::cout << "negative_sequence[" << i << "] = " << negative_sequence[i] << '\n';
@@ -1029,39 +1042,38 @@ void SequencePair::_get_topology_order(
   const bool is_horizontal) {
 
   //std::cout << "get_topology_order\n";
-  std::vector<size_t> in_degree;
   if (is_horizontal) { 
-    in_degree = _in_degree_horizontal; 
+    _in_degree = _in_degree_horizontal; 
   }
   else {
-    in_degree = _in_degree_vertical;
+    _in_degree = _in_degree_vertical;
   }
   _topology_order.clear();
 
-  std::queue<int> q;
+
   for (size_t i = 0; i < _num_modules; ++i) {
-    if (in_degree[i] == 0) {
-      q.push(i);
+    if (_in_degree[i] == 0) {
+      _queue.push(i);
     }
   }
 
-  while (!q.empty()) {
-    int n = q.front();
-    q.pop();
+  while (!_queue.empty()) {
+    int n = _queue.front();
+    _queue.pop();
 
     _topology_order.emplace_back(n);
 
     if (is_horizontal) { 
       for (size_t i = 0; i < _adjacency_list_horizontal[n].size(); ++i) {
-        if ((--in_degree[_adjacency_list_horizontal[n][i]]) == 0) {
-          q.push(_adjacency_list_horizontal[n][i]);
+        if ((--_in_degree[_adjacency_list_horizontal[n][i]]) == 0) {
+          _queue.push(_adjacency_list_horizontal[n][i]);
         }
       }
     }
     else {
       for (size_t i = 0; i < _adjacency_list_vertical[n].size(); ++i) {
-        if ((--in_degree[_adjacency_list_vertical[n][i]]) == 0) {
-          q.push(_adjacency_list_vertical[n][i]);
+        if ((--_in_degree[_adjacency_list_vertical[n][i]]) == 0) {
+          _queue.push(_adjacency_list_vertical[n][i]);
         }
       }
     }
