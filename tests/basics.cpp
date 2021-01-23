@@ -4,7 +4,7 @@
 #include "../src/sp_tester.hpp"
 
 
-/*
+
 TEST_CASE("rotate_module" * doctest::timeout(300)) {
   
   sp::SequencePairTester tester;
@@ -43,9 +43,9 @@ TEST_CASE("rotate_module" * doctest::timeout(300)) {
     }
   }
 }
-*/
-/*
-TEST_CASE("swap_nodes_in_one_sequence" * doctest::timeout(300)) {
+
+
+TEST_CASE("swap_nodes_in_proposed_positive_sequence" * doctest::timeout(300)) {
   
   sp::SequencePairTester tester;
 
@@ -56,165 +56,250 @@ TEST_CASE("swap_nodes_in_one_sequence" * doctest::timeout(300)) {
    
   std::vector<sp::Node> old_modules = tester.get_modules();
 
-  std::list<std::vector<int>> old_sequences = tester.get_sequences();
+  std::list<std::vector<size_t>> old_sequences = tester.get_sequences();
 
-  SUBCASE("nodes_in_positive_sequence") {
-    // swap two nodes in positve sequence
-    tester.swap_two_nodes_one_sequence(old_sequences.front());
+  tester.swap_two_nodes_positive_sequence();
 
-    std::vector<sp::Node> new_modules = tester.get_modules();
+  std::list<std::vector<size_t>> new_sequences = tester.get_sequences();
 
-    std::list<std::vector<int>> new_sequences = tester.get_sequences();
+  std::list<std::vector<size_t>>::iterator it = old_sequences.begin();
 
-    for (size_t i = 0; i < new_modules.size(); ++i) {
-      REQUIRE(new_modules[i].id == old_modules[i].id);
-      REQUIRE(new_modules[i].llx == old_modules[i].llx);
-      REQUIRE(new_modules[i].lly == old_modules[i].lly);
-      REQUIRE(new_modules[i].width == old_modules[i].width);
-      REQUIRE(new_modules[i].height == old_modules[i].height);
-    }
+  std::vector<size_t> positive_sequence_curr_old = *it;
+  std::vector<size_t> negative_sequence_curr_old = *(++it);
+  std::vector<size_t> positive_sequence_prop_old = *(++it);
+  std::vector<size_t> negative_sequence_prop_old = *(++it);
+  std::vector<size_t> positive_sequence_best_old = *(++it);
+  std::vector<size_t> negative_sequence_best_old = *(++it);
+ 
+  it = new_sequences.begin(); 
+  std::vector<size_t> positive_sequence_curr_new = *it;
+  std::vector<size_t> negative_sequence_curr_new = *(++it);
+  std::vector<size_t> positive_sequence_prop_new = *(++it);
+  std::vector<size_t> negative_sequence_prop_new = *(++it);
+  std::vector<size_t> positive_sequence_best_new = *(++it);
+  std::vector<size_t> negative_sequence_best_new = *(++it);
 
-    size_t idx1 = new_sequences.front().size();
-    size_t idx2 = new_sequences.front().size();
+  size_t num_modules = positive_sequence_curr_old.size();
 
-    for (size_t i = 0; i < new_sequences.front().size(); ++i) {
-      REQUIRE(new_sequences.back()[i] == old_sequences.back()[i]);
+  size_t count = 0;
+  
+  int idx1 = -1, idx2 = -1;
 
-      if (new_sequences.front()[i] != old_sequences.front()[i]) {
-        if (idx1 == new_sequences.front().size()) {
-          idx1 = i; 
-        }
-        else {
-          idx2 = i;
-        }
+  for (size_t i = 0; i < num_modules; ++i) {
+    REQUIRE(positive_sequence_curr_old[i] == positive_sequence_curr_new[i]);
+    REQUIRE(negative_sequence_curr_old[i] == negative_sequence_curr_new[i]);
+    REQUIRE(negative_sequence_prop_old[i] == negative_sequence_prop_new[i]);
+    REQUIRE(positive_sequence_best_old[i] == positive_sequence_best_new[i]);
+    REQUIRE(negative_sequence_best_old[i] == negative_sequence_best_new[i]);
+
+    if (positive_sequence_prop_old[i] != positive_sequence_prop_new[i]) {
+      ++count;  
+      if (idx1 == -1) {
+        idx1 = i;
       }
       else {
-        REQUIRE(new_sequences.front()[i] == old_sequences.front()[i]);
+        idx2 = i;
       }
     }
-
-    REQUIRE(new_sequences.front()[idx1] == old_sequences.front()[idx2]);
-    REQUIRE(new_sequences.front()[idx2] == old_sequences.front()[idx1]);
   }
 
-  SUBCASE("nodes_in_negative_sequence") {
-    // swap two nodes in negatve sequence
-    tester.swap_two_nodes_one_sequence(old_sequences.back());
+  REQUIRE(count == 2);
 
-    std::vector<sp::Node> new_modules = tester.get_modules();
-
-    std::list<std::vector<int>> new_sequences = tester.get_sequences();
-
-    for (size_t i = 0; i < new_modules.size(); ++i) {
-      REQUIRE(new_modules[i].id == old_modules[i].id);
-      REQUIRE(new_modules[i].llx == old_modules[i].llx);
-      REQUIRE(new_modules[i].lly == old_modules[i].lly);
-      REQUIRE(new_modules[i].width == old_modules[i].width);
-      REQUIRE(new_modules[i].height == old_modules[i].height);
-    }
-
-    size_t idx1 = new_sequences.back().size();
-    size_t idx2 = new_sequences.back().size();
-
-    for (size_t i = 0; i < new_sequences.back().size(); ++i) {
-      REQUIRE(new_sequences.front()[i] == old_sequences.front()[i]);
-
-      if (new_sequences.back()[i] != old_sequences.back()[i]) {
-        if (idx1 == new_sequences.back().size()) {
-          idx1 = i; 
-        }
-        else {
-          idx2 = i;
-        }
-      }
-      else {
-        REQUIRE(new_sequences.back()[i] == old_sequences.back()[i]);
-      }
-    }
-
-    REQUIRE(new_sequences.back()[idx1] == old_sequences.back()[idx2]);
-    REQUIRE(new_sequences.back()[idx2] == old_sequences.back()[idx1]);
-  }
+  REQUIRE(positive_sequence_prop_old[idx1] == positive_sequence_prop_new[idx2]);
+  REQUIRE(positive_sequence_prop_old[idx2] == positive_sequence_prop_new[idx1]);
+  
+  REQUIRE(positive_sequence_curr_old.size() == 6);
+  REQUIRE(positive_sequence_prop_old.size() == 6);
+  REQUIRE(positive_sequence_best_old.size() == 6);
+  REQUIRE(positive_sequence_curr_new.size() == 6);
+  REQUIRE(positive_sequence_prop_new.size() == 6);
+  REQUIRE(positive_sequence_best_new.size() == 6);
+  REQUIRE(negative_sequence_curr_old.size() == 6);
+  REQUIRE(negative_sequence_prop_old.size() == 6);
+  REQUIRE(negative_sequence_best_old.size() == 6);
+  REQUIRE(negative_sequence_curr_new.size() == 6);
+  REQUIRE(negative_sequence_prop_new.size() == 6);
+  REQUIRE(negative_sequence_best_new.size() == 6);
 }
-*/
 
 
-/*
-TEST_CASE("swap_nodes_in_two_sequences" * doctest::timeout(300)) {
+TEST_CASE("swap_nodes_in_proposed_negative_sequence" * doctest::timeout(300)) {
   
   sp::SequencePairTester tester;
 
-  tester.open("../../circuits/circuit2.txt");
+  tester.open("../../circuits/circuit2.txt");  
   //tester.open("../circuits/circuit2.txt");
-  
+ 
   tester.generate_initial_pair();
    
   std::vector<sp::Node> old_modules = tester.get_modules();
 
-  std::list<std::vector<int>> old_sequences = tester.get_sequences();
+  std::list<std::vector<size_t>> old_sequences = tester.get_sequences();
 
-  tester.swap_two_nodes_two_sequences(old_sequences.front(), 
-                                     old_sequences.back());
+  tester.swap_two_nodes_negative_sequence();
 
-  std::vector<sp::Node> new_modules = tester.get_modules();
+  std::list<std::vector<size_t>> new_sequences = tester.get_sequences();
 
-  std::list<std::vector<int>> new_sequences = tester.get_sequences();
+  std::list<std::vector<size_t>>::iterator it = old_sequences.begin();
 
-  // new and old modules should be the same configurations
-  for (size_t i = 0; i < new_modules.size(); ++i) {
-    REQUIRE(new_modules[i].id == old_modules[i].id);
-    REQUIRE(new_modules[i].llx == old_modules[i].llx);
-    REQUIRE(new_modules[i].lly == old_modules[i].lly);
-    REQUIRE(new_modules[i].width == old_modules[i].width);
-    REQUIRE(new_modules[i].height == old_modules[i].height);
-  }
+  std::vector<size_t> positive_sequence_curr_old = *it;
+  std::vector<size_t> negative_sequence_curr_old = *(++it);
+  std::vector<size_t> positive_sequence_prop_old = *(++it);
+  std::vector<size_t> negative_sequence_prop_old = *(++it);
+  std::vector<size_t> positive_sequence_best_old = *(++it);
+  std::vector<size_t> negative_sequence_best_old = *(++it);
+ 
+  it = new_sequences.begin(); 
+  std::vector<size_t> positive_sequence_curr_new = *it;
+  std::vector<size_t> negative_sequence_curr_new = *(++it);
+  std::vector<size_t> positive_sequence_prop_new = *(++it);
+  std::vector<size_t> negative_sequence_prop_new = *(++it);
+  std::vector<size_t> positive_sequence_best_new = *(++it);
+  std::vector<size_t> negative_sequence_best_new = *(++it);
 
-  // test the positive sequence
-  size_t idx1 = new_sequences.front().size();
-  size_t idx2 = new_sequences.front().size();
+  size_t num_modules = positive_sequence_curr_old.size();
 
-  for (size_t i = 0; i < new_sequences.front().size(); ++i) {
-    if (new_sequences.front()[i] != old_sequences.front()[i]) {
-      if (idx1 == new_sequences.front().size()) {
-        idx1 = i; 
+  size_t count = 0;
+  
+  int idx1 = -1, idx2 = -1;
+
+  for (size_t i = 0; i < num_modules; ++i) {
+    REQUIRE(positive_sequence_curr_old[i] == positive_sequence_curr_new[i]);
+    REQUIRE(negative_sequence_curr_old[i] == negative_sequence_curr_new[i]);
+    REQUIRE(positive_sequence_prop_old[i] == positive_sequence_prop_new[i]);
+    REQUIRE(positive_sequence_best_old[i] == positive_sequence_best_new[i]);
+    REQUIRE(negative_sequence_best_old[i] == negative_sequence_best_new[i]);
+
+    if (negative_sequence_prop_old[i] != negative_sequence_prop_new[i]) {
+      ++count;  
+      if (idx1 == -1) {
+        idx1 = i;
       }
       else {
         idx2 = i;
       }
     }
-
-    else {
-      REQUIRE(new_sequences.front()[i] == old_sequences.front()[i]);
-    }
   }
 
-  REQUIRE(new_sequences.front()[idx1] == old_sequences.front()[idx2]);
-  REQUIRE(new_sequences.front()[idx2] == old_sequences.front()[idx1]);
+  REQUIRE(count == 2);
+
+  REQUIRE(negative_sequence_prop_old[idx1] == negative_sequence_prop_new[idx2]);
+  REQUIRE(negative_sequence_prop_old[idx2] == negative_sequence_prop_new[idx1]);
   
-  
-  // test the negative sequence
-  idx1 = new_sequences.back().size();
-  idx2 = new_sequences.back().size();
-
-  for (size_t i = 0; i < new_sequences.back().size(); ++i) {
-    if (new_sequences.back()[i] != old_sequences.back()[i]) {
-      if (idx1 == new_sequences.back().size()) {
-        idx1 = i; 
-      }
-      else {
-        idx2 = i;
-      }
-    }
-
-    else {
-      REQUIRE(new_sequences.back()[i] == old_sequences.back()[i]);
-    }
-  }
-
-  REQUIRE(new_sequences.back()[idx1] == old_sequences.back()[idx2]);
-  REQUIRE(new_sequences.back()[idx2] == old_sequences.back()[idx1]);
+  REQUIRE(positive_sequence_curr_old.size() == 6);
+  REQUIRE(positive_sequence_prop_old.size() == 6);
+  REQUIRE(positive_sequence_best_old.size() == 6);
+  REQUIRE(positive_sequence_curr_new.size() == 6);
+  REQUIRE(positive_sequence_prop_new.size() == 6);
+  REQUIRE(positive_sequence_best_new.size() == 6);
+  REQUIRE(negative_sequence_curr_old.size() == 6);
+  REQUIRE(negative_sequence_prop_old.size() == 6);
+  REQUIRE(negative_sequence_best_old.size() == 6);
+  REQUIRE(negative_sequence_curr_new.size() == 6);
+  REQUIRE(negative_sequence_prop_new.size() == 6);
+  REQUIRE(negative_sequence_best_new.size() == 6);
 }
-*/
+
+
+TEST_CASE("swap_nodes_in_both_proposed_sequences" * doctest::timeout(300)) {
+  
+  sp::SequencePairTester tester;
+
+  tester.open("../../circuits/circuit2.txt");  
+  //tester.open("../circuits/circuit2.txt");
+ 
+  tester.generate_initial_pair();
+   
+  std::vector<sp::Node> old_modules = tester.get_modules();
+
+  std::list<std::vector<size_t>> old_sequences = tester.get_sequences();
+
+  tester.swap_two_nodes_two_sequences();
+
+  std::list<std::vector<size_t>> new_sequences = tester.get_sequences();
+
+  std::list<std::vector<size_t>>::iterator it = old_sequences.begin();
+
+  std::vector<size_t> positive_sequence_curr_old = *it;
+  std::vector<size_t> negative_sequence_curr_old = *(++it);
+  std::vector<size_t> positive_sequence_prop_old = *(++it);
+  std::vector<size_t> negative_sequence_prop_old = *(++it);
+  std::vector<size_t> positive_sequence_best_old = *(++it);
+  std::vector<size_t> negative_sequence_best_old = *(++it);
+ 
+  it = new_sequences.begin(); 
+  std::vector<size_t> positive_sequence_curr_new = *it;
+  std::vector<size_t> negative_sequence_curr_new = *(++it);
+  std::vector<size_t> positive_sequence_prop_new = *(++it);
+  std::vector<size_t> negative_sequence_prop_new = *(++it);
+  std::vector<size_t> positive_sequence_best_new = *(++it);
+  std::vector<size_t> negative_sequence_best_new = *(++it);
+
+  size_t num_modules = positive_sequence_curr_old.size();
+
+  size_t pcount = 0, ncount = 0;
+  
+  int pidx1 = -1, pidx2 = -1, nidx1 = -1, nidx2 = -1;
+
+  for (size_t i = 0; i < num_modules; ++i) {
+    REQUIRE(positive_sequence_curr_old[i] == positive_sequence_curr_new[i]);
+    REQUIRE(negative_sequence_curr_old[i] == negative_sequence_curr_new[i]);
+    REQUIRE(positive_sequence_best_old[i] == positive_sequence_best_new[i]);
+    REQUIRE(negative_sequence_best_old[i] == negative_sequence_best_new[i]);
+
+    if (negative_sequence_prop_old[i] != negative_sequence_prop_new[i]) {
+      ++ncount;  
+      if (nidx1 == -1) {
+        nidx1 = i;
+      }
+      else {
+        nidx2 = i;
+      }
+    }
+
+    if (positive_sequence_prop_old[i] != positive_sequence_prop_new[i]) {
+      ++pcount;  
+      if (pidx1 == -1) {
+        pidx1 = i;
+      }
+      else {
+        pidx2 = i;
+      }
+    }
+  }
+
+  REQUIRE(pcount == 2);
+  REQUIRE(ncount == 2);
+
+  REQUIRE(negative_sequence_prop_old[nidx1] == negative_sequence_prop_new[nidx2]);
+  REQUIRE(negative_sequence_prop_old[nidx2] == negative_sequence_prop_new[nidx1]);
+  
+  REQUIRE(positive_sequence_prop_old[pidx1] == positive_sequence_prop_new[pidx2]);
+  REQUIRE(positive_sequence_prop_old[pidx2] == positive_sequence_prop_new[pidx1]);
+  
+  if (positive_sequence_prop_old[pidx1] == negative_sequence_prop_old[nidx1]) {
+    REQUIRE(positive_sequence_prop_old[pidx1] == negative_sequence_prop_old[nidx1]);
+    REQUIRE(positive_sequence_prop_old[pidx2] == negative_sequence_prop_old[nidx2]);
+  }
+  else {
+    REQUIRE(positive_sequence_prop_old[pidx1] == negative_sequence_prop_old[nidx2]);
+    REQUIRE(positive_sequence_prop_old[pidx2] == negative_sequence_prop_old[nidx1]);
+  }
+
+  REQUIRE(positive_sequence_curr_old.size() == 6);
+  REQUIRE(positive_sequence_prop_old.size() == 6);
+  REQUIRE(positive_sequence_best_old.size() == 6);
+  REQUIRE(positive_sequence_curr_new.size() == 6);
+  REQUIRE(positive_sequence_prop_new.size() == 6);
+  REQUIRE(positive_sequence_best_new.size() == 6);
+  REQUIRE(negative_sequence_curr_old.size() == 6);
+  REQUIRE(negative_sequence_prop_old.size() == 6);
+  REQUIRE(negative_sequence_best_old.size() == 6);
+  REQUIRE(negative_sequence_curr_new.size() == 6);
+  REQUIRE(negative_sequence_prop_new.size() == 6);
+  REQUIRE(negative_sequence_best_new.size() == 6);
+}
+
 
 
 /*
@@ -289,24 +374,20 @@ TEST_CASE("generate_adjacency_list" * doctest::timeout(300)) {
 }
 */
 
-/*
+
 TEST_CASE("get_topology_order" * doctest::timeout(300)) {
 
   sp::SequencePairTester tester;
 
-  tester.open("../../circuits/circuit2.txt");
-  //tester.open("../circuits/circuit2.txt");
-
-  std::vector<int> positive_sequence{1, 2, 4, 5, 3, 0};
-  std::vector<int> negative_sequence{3, 2, 0, 1, 4, 5};
-
-  std::vector<int> topology_order;
+  std::vector<size_t> topology_order;
   
   SUBCASE("is_horizontal") {
-    tester.generate_adjacency_list(
-      positive_sequence, negative_sequence, true);
 
-    topology_order = tester.get_topology_order();
+    tester.open("../../circuits/circuit2.txt");
+    
+    tester.generate_initial_pair();
+    
+    topology_order = tester.get_topology_order(true);
   
     size_t idx0, idx1, idx2, idx3, idx4, idx5; 
     for (size_t i = 0; i < topology_order.size(); ++i) {
@@ -317,7 +398,7 @@ TEST_CASE("get_topology_order" * doctest::timeout(300)) {
       else if (topology_order[i] == 4) { idx4 = i; }    
       else                             { idx5 = i; }    
     }
-     
+   
     REQUIRE(topology_order.size() == 6);
     
     REQUIRE(idx1 < idx4);
@@ -331,10 +412,11 @@ TEST_CASE("get_topology_order" * doctest::timeout(300)) {
 
   SUBCASE("is_vertical") {
 
-    tester.generate_adjacency_list(
-      positive_sequence, negative_sequence, false);
-
-    topology_order = tester.get_topology_order();
+    tester.open("../../circuits/circuit2.txt");
+    
+    tester.generate_initial_pair();
+    
+    topology_order = tester.get_topology_order(false);
     
     size_t idx0, idx1, idx2, idx3, idx4, idx5; 
     for (size_t i = 0; i < topology_order.size(); ++i) {
@@ -358,7 +440,8 @@ TEST_CASE("get_topology_order" * doctest::timeout(300)) {
     REQUIRE(idx0 < idx1);
   }
 }
-*/
+
+
 /*
 TEST_CASE("get_longest_path" * doctest::timeout(300)) {
   

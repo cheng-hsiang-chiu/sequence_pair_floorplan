@@ -107,14 +107,16 @@ class SequencePair{
 
     size_t _generate_neighbors();
 
-    size_t _pack(const std::vector<size_t>& positive_sequence,
-                 const std::vector<size_t>& negative_sequence,
-                 const size_t operation);
+    size_t _pack(
+      const std::vector<size_t>& positive_sequence,
+      const std::vector<size_t>& negative_sequence,
+      const size_t operation);
 
-    void _pack_helper(const std::vector<size_t>& positive_sequence,
-                      const std::vector<size_t>& negative_sequence, 
-                      const bool is_horizontal,
-                      const size_t operation);
+    void _pack_helper(
+      const std::vector<size_t>& positive_sequence,
+      const std::vector<size_t>& negative_sequence, 
+      const bool is_horizontal,
+      const size_t operation);
 
     void _dump_cost(std::string output_file) const;
 
@@ -180,7 +182,7 @@ void SequencePair::dump(std::ostream& os) const {
 // dump floorplan to a file with a json extesion
 void SequencePair::dump_json(std::string output_file) const {
  
-  _dump_cost(output_file);
+  //_dump_cost(output_file);
    
   if (output_file.rfind(".json") == std::string::npos) {
     output_file.append(".json");
