@@ -32,15 +32,14 @@ class SequencePairTester{
 
     std::vector<size_t> get_topology_order(const bool is_horizontal);
 
-    void generate_adjacency_list(
+    std::vector<Node> get_longest_path(const bool is_horizontal);
+
+    std::vector<std::vector<size_t>>  generate_adjacency_list(
       const std::vector<size_t>& positive_sequence, 
       const std::vector<size_t>& negative_sequence, 
       const bool is_horizontal);
 
-    std::vector<std::vector<size_t>> get_adjacency_list_horizontal();
-    
-    std::vector<std::vector<size_t>> get_adjacency_list_vertical();
-    
+    std::vector<size_t> get_in_degree(const bool is_horizontal);
 };
 
 
@@ -118,28 +117,37 @@ std::list<std::vector<size_t>> SequencePairTester::get_sequences() {
 }
 
 
-// get adjacency list
-std::vector<std::vector<size_t>> 
-  SequencePairTester::get_adjacency_list_horizontal() {
-  return sp._adjacency_list_horizontal;
-}
-
-
-// get adjacency list negative
-std::vector<std::vector<size_t>> 
-  SequencePairTester::get_adjacency_list_vertical() {
-  return sp._adjacency_list_vertical;
-}
-
-
 // generate adjacency list
-void SequencePairTester::generate_adjacency_list(
+std::vector<std::vector<size_t>> SequencePairTester::generate_adjacency_list(
   const std::vector<size_t>& positive_sequence, 
   const std::vector<size_t>& negative_sequence, 
   const bool is_horizontal) {
+  /*
+  sp._adjacency_list_horizontal[0] = std::vector<size_t>{};
+  sp._adjacency_list_horizontal[1] = std::vector<size_t>{4, 5};
+  sp._adjacency_list_horizontal[2] = std::vector<size_t>{0, 4, 5};
+  sp._adjacency_list_horizontal[3] = std::vector<size_t>{0};
+  sp._adjacency_list_horizontal[4] = std::vector<size_t>{5};
+  sp._adjacency_list_horizontal[5] = std::vector<size_t>{};
 
+  sp._adjacency_list_vertical[0] = std::vector<size_t>{1, 4, 5};
+  sp._adjacency_list_vertical[1] = std::vector<size_t>{};
+  sp._adjacency_list_vertical[2] = std::vector<size_t>{1};
+  sp._adjacency_list_vertical[3] = std::vector<size_t>{1, 2, 4, 5};
+  sp._adjacency_list_vertical[4] = std::vector<size_t>{};
+  sp._adjacency_list_vertical[5] = std::vector<size_t>{};
+  */
+   
   sp._generate_adjacency_list(
     positive_sequence, negative_sequence, is_horizontal);
+
+  if (is_horizontal) {
+    return sp._adjacency_list_horizontal;
+  }
+  else {
+    return sp._adjacency_list_vertical;
+  }
+
 }
 
 
@@ -170,15 +178,46 @@ std::vector<size_t> SequencePairTester::get_topology_order(
 }
 
 
-/*
+
 // get longest path
-std::vector<int> SequencePairTester::get_longest_path(
+std::vector<Node> SequencePairTester::get_longest_path(
   const bool is_horizontal) {
-  
+
+  sp._in_degree_horizontal = std::vector<size_t>{2, 0, 0, 0, 2, 3};
+  sp._in_degree_vertical = std::vector<size_t>{0, 3, 1, 0, 2, 2};
+
+  sp._adjacency_list_horizontal[0] = std::vector<size_t>{};
+  sp._adjacency_list_horizontal[1] = std::vector<size_t>{4, 5};
+  sp._adjacency_list_horizontal[2] = std::vector<size_t>{0, 4, 5};
+  sp._adjacency_list_horizontal[3] = std::vector<size_t>{0};
+  sp._adjacency_list_horizontal[4] = std::vector<size_t>{5};
+  sp._adjacency_list_horizontal[5] = std::vector<size_t>{};
+
+  sp._adjacency_list_vertical[0] = std::vector<size_t>{1, 4, 5};
+  sp._adjacency_list_vertical[1] = std::vector<size_t>{};
+  sp._adjacency_list_vertical[2] = std::vector<size_t>{1};
+  sp._adjacency_list_vertical[3] = std::vector<size_t>{1, 2, 4, 5};
+  sp._adjacency_list_vertical[4] = std::vector<size_t>{};
+  sp._adjacency_list_vertical[5] = std::vector<size_t>{};
+
+  sp._get_topology_order(is_horizontal);
+
   sp._get_longest_path(is_horizontal);
-  return sp._longest_path;
+ 
+  return sp._modules;
 }
-*/
+
+
+std::vector<size_t> SequencePairTester::get_in_degree(
+  const bool is_horizontal) {
+
+  if (is_horizontal) {
+    return sp._in_degree_horizontal;
+  }
+  else {
+    return sp._in_degree_vertical;
+  }
+}
 
 
 }

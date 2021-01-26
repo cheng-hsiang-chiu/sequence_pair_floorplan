@@ -302,77 +302,6 @@ TEST_CASE("swap_nodes_in_both_proposed_sequences" * doctest::timeout(300)) {
 
 
 
-/*
-TEST_CASE("generate_adjacency_list" * doctest::timeout(300)) {
-
-  sp::SequencePairTester tester;
-
-  tester.open("../../circuits/circuit2.txt");
-  //tester.open("../circuits/circuit2.txt");
-
-  std::vector<int> positive_sequence{1, 2, 4, 5, 3, 0};
-  std::vector<int> negative_sequence{3, 2, 0, 1, 4, 5};
-
-  std::vector<std::vector<size_t>> adjacency_list;
-
-  SUBCASE("is_horizontal") {
-    tester.generate_adjacency_list(
-      positive_sequence, negative_sequence, true);
-
-    adjacency_list = tester.get_adjacency_list();
-
-    for (size_t i = 0; i < adjacency_list.size(); ++i) {
-      for (size_t j = 0; j < adjacency_list[i].size(); ++j) {
-        std::cout << "adjacency_list[" << i << "][" << j << "] = " 
-                  << adjacency_list[i][j] << '\n';
-      }
-    }
-
-    REQUIRE(adjacency_list[0].size() == 0);
-    REQUIRE(adjacency_list[1].size() == 2);
-    REQUIRE(adjacency_list[2].size() == 3);
-    REQUIRE(adjacency_list[3].size() == 1);
-    REQUIRE(adjacency_list[4].size() == 1);
-    REQUIRE(adjacency_list[5].size() == 0);
-
-    REQUIRE(adjacency_list[1][0] == 4);
-    REQUIRE(adjacency_list[1][1] == 5);
-    
-    REQUIRE(adjacency_list[2][0] == 0);
-    REQUIRE(adjacency_list[2][1] == 4);
-    REQUIRE(adjacency_list[2][2] == 5);
-
-    REQUIRE(adjacency_list[3][0] == 0);
-    
-    REQUIRE(adjacency_list[4][0] == 5);
-  }
-
-  SUBCASE("is_vertical") {
-    tester.generate_adjacency_list(
-      positive_sequence, negative_sequence, false);
-
-    adjacency_list = tester.get_adjacency_list();
-
-    REQUIRE(adjacency_list[0].size() == 3);
-    REQUIRE(adjacency_list[1].size() == 0);
-    REQUIRE(adjacency_list[2].size() == 1);
-    REQUIRE(adjacency_list[3].size() == 4);
-    REQUIRE(adjacency_list[4].size() == 0);
-    REQUIRE(adjacency_list[5].size() == 0);
-
-    REQUIRE(adjacency_list[0][0] == 1);
-    REQUIRE(adjacency_list[0][1] == 4);
-    REQUIRE(adjacency_list[0][2] == 5);
-    
-    REQUIRE(adjacency_list[2][0] == 1);
-
-    REQUIRE(adjacency_list[3][0] == 1);
-    REQUIRE(adjacency_list[3][1] == 2);
-    REQUIRE(adjacency_list[3][2] == 4);
-    REQUIRE(adjacency_list[3][3] == 5);
-  }
-}
-*/
 
 
 TEST_CASE("get_topology_order" * doctest::timeout(300)) {
@@ -442,62 +371,165 @@ TEST_CASE("get_topology_order" * doctest::timeout(300)) {
 }
 
 
-/*
 TEST_CASE("get_longest_path" * doctest::timeout(300)) {
   
   sp::SequencePairTester tester;
   
-  tester.open("../../circuits/circuit2.txt");
-  //tester.open("../circuits/circuit2.txt");
+  std::vector<sp::Node> new_modules;
+  
+  std::vector<sp::Node> old_modules;
 
-  tester.generate_initial_pair();
-
-  std::vector<int> longest_path;
-  std::vector<int> topology_order;
-
-  std::vector<int> positive_sequence{1, 2, 4, 5, 3, 0};
-  std::vector<int> negative_sequence{3, 2, 0, 1, 4, 5};
- 
   SUBCASE("is_horizontal") {
-    tester.generate_adjacency_list(
-      positive_sequence, negative_sequence, true);
 
-    topology_order = tester.get_topology_order();
+    tester.open("../../circuits/circuit2.txt");
+    //tester.open("../circuits/circuit2.txt");
 
-    longest_path = tester.get_longest_path(true);
+    tester.generate_initial_pair();
+
+    old_modules = tester.get_modules(); 
     
-    std::cout << "horizontal longest path\n";
-    for (auto l : longest_path)  std::cout << l << ' ';
-    std::cout << '\n';
-    REQUIRE(longest_path.size() == 6);
+    new_modules = tester.get_longest_path(true);
+    
+    REQUIRE(new_modules.size() == 6);
+    REQUIRE(old_modules.size() == 6);
 
-    REQUIRE(longest_path[0] == 696);
-    REQUIRE(longest_path[1] == 0);
-    REQUIRE(longest_path[2] == 0);
-    REQUIRE(longest_path[3] == 0);
-    REQUIRE(longest_path[4] == 332);
-    REQUIRE(longest_path[5] == 643);
+    REQUIRE(new_modules[0].llx == 696);
+    REQUIRE(new_modules[1].llx == 0);
+    REQUIRE(new_modules[2].llx == 0);
+    REQUIRE(new_modules[3].llx == 0);
+    REQUIRE(new_modules[4].llx == 332);
+    REQUIRE(new_modules[5].llx == 643);
+
+    REQUIRE(new_modules[0].lly == old_modules[0].lly);
+    REQUIRE(new_modules[1].lly == old_modules[1].lly);
+    REQUIRE(new_modules[2].lly == old_modules[2].lly);
+    REQUIRE(new_modules[3].lly == old_modules[3].lly);
+    REQUIRE(new_modules[4].lly == old_modules[4].lly);
+    REQUIRE(new_modules[5].lly == old_modules[5].lly);
   }
 
   SUBCASE("is_vertical") {
-    tester.generate_adjacency_list(
-      positive_sequence, negative_sequence, false);
-
-    topology_order = tester.get_topology_order();
-
-    longest_path = tester.get_longest_path(false);
     
-    std::cout << "vertical longest path\n";
-    for (auto l : longest_path)  std::cout << l << ' ';
-    REQUIRE(longest_path.size() == 6);
+    tester.open("../../circuits/circuit2.txt");
+    //tester.open("../circuits/circuit2.txt");
 
-    REQUIRE(longest_path[0] == 0);
-    REQUIRE(longest_path[1] == 426);
-    REQUIRE(longest_path[2] == 172);
-    REQUIRE(longest_path[3] == 0);
-    REQUIRE(longest_path[4] == 172);
-    REQUIRE(longest_path[5] == 172);
+    tester.generate_initial_pair();
+   
+    old_modules = tester.get_modules();
+     
+    new_modules = tester.get_longest_path(false);
+    
+    REQUIRE(new_modules.size() == 6);
+    REQUIRE(old_modules.size() == 6);
+    
+    REQUIRE(new_modules[0].lly == 0);
+    REQUIRE(new_modules[1].lly == 426);
+    REQUIRE(new_modules[2].lly == 172);
+    REQUIRE(new_modules[3].lly == 0);
+    REQUIRE(new_modules[4].lly == 172);
+    REQUIRE(new_modules[5].lly == 172);
+    
+    REQUIRE(new_modules[0].llx == old_modules[0].lly);
+    REQUIRE(new_modules[1].llx == old_modules[1].lly);
+    REQUIRE(new_modules[2].llx == old_modules[2].lly);
+    REQUIRE(new_modules[3].llx == old_modules[3].lly);
+    REQUIRE(new_modules[4].llx == old_modules[4].lly);
+    REQUIRE(new_modules[5].llx == old_modules[5].lly);
   }
 }
-*/
+
+
+
+TEST_CASE("generate_adjacency_list" * doctest::timeout(300)) {
+
+  sp::SequencePairTester tester;
+
+  tester.open("../../circuits/circuit2.txt");
+  //tester.open("../circuits/circuit2.txt");
+
+  std::vector<size_t> positive_sequence{1, 2, 4, 5, 3, 0};
+  std::vector<size_t> negative_sequence{3, 2, 0, 1, 4, 5};
+
+  std::vector<std::vector<size_t>> adjacency_list;
+  std::vector<size_t> in_degree;
+
+  SUBCASE("is_horizontal") {
+    tester.generate_initial_pair();
+    
+    adjacency_list = tester.generate_adjacency_list(
+      positive_sequence, negative_sequence, true);
+
+    in_degree = tester.get_in_degree(true);
+
+    /*
+    for (size_t i = 0; i < adjacency_list.size(); ++i) {
+      for (size_t j = 0; j < adjacency_list[i].size(); ++j) {
+        std::cout << "adjacency_list[" << i << "][" << j << "] = " 
+                  << adjacency_list[i][j] << '\n';
+      }
+    }
+    */
+
+    REQUIRE(adjacency_list[0].size() == 0);
+    REQUIRE(adjacency_list[1].size() == 2);
+    REQUIRE(adjacency_list[2].size() == 3);
+    REQUIRE(adjacency_list[3].size() == 1);
+    REQUIRE(adjacency_list[4].size() == 1);
+    REQUIRE(adjacency_list[5].size() == 0);
+
+    REQUIRE(adjacency_list[1][0] == 4);
+    REQUIRE(adjacency_list[1][1] == 5);
+    
+    REQUIRE(adjacency_list[2][0] == 0);
+    REQUIRE(adjacency_list[2][1] == 4);
+    REQUIRE(adjacency_list[2][2] == 5);
+
+    REQUIRE(adjacency_list[3][0] == 0);
+    
+    REQUIRE(adjacency_list[4][0] == 5);
+
+    REQUIRE(in_degree.size() == 6);
+    REQUIRE(in_degree[0] == 2);
+    REQUIRE(in_degree[1] == 0);
+    REQUIRE(in_degree[2] == 0);
+    REQUIRE(in_degree[3] == 0);
+    REQUIRE(in_degree[4] == 2);
+    REQUIRE(in_degree[5] == 3);
+  }
+
+  SUBCASE("is_vertical") {
+    tester.generate_initial_pair();
+    
+    adjacency_list = tester.generate_adjacency_list(
+      positive_sequence, negative_sequence, false);
+
+    in_degree = tester.get_in_degree(false);
+
+    REQUIRE(adjacency_list[0].size() == 3);
+    REQUIRE(adjacency_list[1].size() == 0);
+    REQUIRE(adjacency_list[2].size() == 1);
+    REQUIRE(adjacency_list[3].size() == 4);
+    REQUIRE(adjacency_list[4].size() == 0);
+    REQUIRE(adjacency_list[5].size() == 0);
+
+    REQUIRE(adjacency_list[0][0] == 1);
+    REQUIRE(adjacency_list[0][1] == 4);
+    REQUIRE(adjacency_list[0][2] == 5);
+    
+    REQUIRE(adjacency_list[2][0] == 1);
+
+    REQUIRE(adjacency_list[3][0] == 1);
+    REQUIRE(adjacency_list[3][1] == 2);
+    REQUIRE(adjacency_list[3][2] == 4);
+    REQUIRE(adjacency_list[3][3] == 5);
+    
+    REQUIRE(in_degree.size() == 6);
+    REQUIRE(in_degree[0] == 0);
+    REQUIRE(in_degree[1] == 3);
+    REQUIRE(in_degree[2] == 1);
+    REQUIRE(in_degree[3] == 0);
+    REQUIRE(in_degree[4] == 2);
+    REQUIRE(in_degree[5] == 2);
+  }
+}
 
