@@ -747,16 +747,31 @@ void SequencePair::_get_topology_order(
 
 // get the longest path 
 void SequencePair::_get_longest_path(const bool is_horizontal) {
-
-  for (size_t i = 0; i < _num_modules; ++i) {
-    
-    if (is_horizontal) {
-      _modules[_mapping.at(i)].llx = 0;
+  
+  // TODO:
+  if(is_horizontal) {
+    for(size_t i=0; i< _num_modules; ++i) {
+      _modules[i].llx = 0;
     }
-    else {
-      _modules[_mapping.at(i)].lly = 0;
+
+    // TODO: can we do this
+    // std::memset(src, num_bytes, 0);
+  }
+  else {
+    for(size_t i=0; i< _num_modules; ++i) {
+      _modules[i].lly = 0;
     }
   }
+
+  //for (size_t i = 0; i < _num_modules; ++i) {
+  //  
+  //  if(is_horizontal) {
+  //    _modules[i].llx = 0;
+  //  }
+  //  else {
+  //    _modules[i].lly = 0;
+  //  }
+  //}
 
   size_t cost = 0;
 
@@ -771,7 +786,6 @@ void SequencePair::_get_longest_path(const bool is_horizontal) {
       for (size_t j = 0; j < _adjacency_list_horizontal.at(sid).size(); ++j) {
         
         cost = _modules[_mapping.at(sid)].width;
-        
         if (_modules[_mapping.at(_adjacency_list_horizontal.at(sid).at(j))].llx < 
             _modules[_mapping.at(sid)].llx + cost) {
 
